@@ -386,7 +386,7 @@ async function fetchAIResponse(userText) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"
+      "Authorization": "Bearer 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"
     },
     body: JSON.stringify({ model: "deepseek/deepseek-chat", messages: conversationHistory.slice(-10) }),
   });
