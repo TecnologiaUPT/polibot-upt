@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PoliBot</title>
+
+  <link rel="icon" href="images/polibot.jpg" type="image/jpeg">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css">
+  
+</head>
+<body>
+  <div id="chat-button">
+  <div class="polibot-face-background"></div>
+
+  <div class="polibot-face-container">
+    <img src="images/ojos-abiertos.png" alt="" id="polibotOjos" class="polibot-face-part">
+    <img src="images/boca-cerrada.png" alt="" id="polibotBoca" class="polibot-face-part">
+  </div>
+  
+  <span class="icon-close">❌</span>
+</div>
+
+  <div id="chat-box" class="hidden">
+    <div id="chat-header">
+      <button id="close-chat-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div id="header-center">
+        <span id="chat-title">PoliBot</span>
+        <span id="polibot-status" class="status-indicator-text online">En línea</span>
+      </div>
+      <button id="theme-toggle">☀️</button>
+    </div>
+
+    <div id="chat-messages"></div>
+
+    <div id="input-area">
+      <textarea id="user-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+      <button id="send-button" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+  <div id="copy-notification">Copiado al portapapeles</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
+  
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/dist/index.umd.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>

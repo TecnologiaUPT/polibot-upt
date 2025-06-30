@@ -1,0 +1,500 @@
+/* -------------------- */
+/* ESTILOS GENERALES */
+/* -------------------- */
+:root {
+  --primary-color: #1E3A8A; /* Azul institucional UPTVT */
+  --primary-dark: #0F2D66;
+  --light-gray: #f9f9f9;
+  --medium-gray: #e6e6e6;
+  --dark-gray: #333;
+  --text-color: #333;
+  --text-light: #555;
+  --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* -------------------- */
+/* BOTÓN FLOTANTE DE CHAT */
+/* -------------------- */
+#chat-button {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  width: 64px;
+  height: 64px;
+  background-color: transparent; /* Se hace transparente para mostrar la cara */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0; /* Se quita el padding para ajustar la cara */
+  overflow: hidden; 
+}
+
+#chat-button:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ================================= */
+/* ESTILOS PARA LA CARA DE POLIBOT   */
+/* ================================= */
+/* Fondo azul del botón */
+.polibot-face-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  z-index: -1; /* Se asegura que esté detrás de la cara */
+  transition: background-color 0.3s ease;
+}
+
+#chat-button:hover .polibot-face-background {
+    background-color: var(--primary-dark);
+}
+
+/* Contenedor que centra las partes de la cara */
+.polibot-face-container {
+  position: relative;
+  width: 85%; /* Ajusta el tamaño de la cara dentro del círculo */
+  height: 85%;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Oculta la cara cuando el chat está abierto */
+#chat-button.chat-is-open .polibot-face-container {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* Muestra el icono de cerrar X cuando el chat está abierto */
+#chat-button.chat-is-open .icon-close {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Estilo para los ojos y la boca */
+.polibot-face-part {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  transition: opacity 0.1s ease; /* Transición suave para los cambios */
+}
+
+/* Posicionamiento específico para los ojos y boca */
+#polibotOjos { top: 0; }
+#polibotBoca { bottom: 0; }
+
+/* El icono de cerrar está oculto y escalado a 0 por defecto */
+#chat-button .icon-close {
+  display: flex; /* Usamos flex para centrar la X */
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: absolute; /* Lo posicionamos sobre la imagen */
+  opacity: 0;
+  transform: scale(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+
+/* -------------------- */
+/* CABECERA DEL CHAT */
+/* -------------------- */
+#chat-header {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 16px;
+  font-weight: 500;
+  text-align: center;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#chat-title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+#close-chat-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  line-height: 0;
+}
+
+#theme-toggle {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: white;
+  transition: transform 0.2s ease;
+}
+
+#theme-toggle:hover {
+  transform: scale(1.1);
+}
+
+/* -------------------- */
+/* INDICADOR DE ESTADO EN CABECERA */
+/* -------------------- */
+#polibot-status {
+  font-size: 12px;
+  font-weight: normal;
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  vertical-align: middle;
+}
+
+#polibot-status.online { background-color: #4CAF50; color: white; }
+#polibot-status.offline { background-color: #f44336; color: white; }
+#polibot-status.connecting { 
+  background-color: #ff9800; 
+  color: white;
+}
+
+/* -------------------- */
+/* NOTIFICACIÓN PING */
+/* -------------------- */
+.notification-ping { animation: ping 1.5s infinite; }
+@keyframes ping {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* -------------------- */
+/* TEMA OSCURO */
+/* -------------------- */
+.dark-theme #chat-box { background: #2d3748; color: #f7fafc; }
+.dark-theme #chat-header { background-color: #1a365d; }
+.dark-theme #chat-messages { background: #1a202c; color: #f7fafc; }
+.dark-theme .message.ia { background: #4a5568; color: #f7fafc; }
+.dark-theme #input-area { background: #2d3748; border-top-color: #4a5568; }
+.dark-theme #user-input { background: #2d3748; color: white; }
+.dark-theme #user-input::placeholder { color: #a0aec0; }
+.dark-theme #send-button:disabled { background-color: #4a5568; }
+.dark-theme #send-button:disabled svg { color: #718096; }
+.dark-theme #send-button:not(:disabled) { background-color: #1a365d; }
+.dark-theme #send-button:not(:disabled):hover { background-color: #2d3748; }
+.dark-theme #theme-toggle { color: #fbd38d; }
+.dark-theme #polibot-status.online { background-color: #66BB6A; }
+.dark-theme #polibot-status.offline { background-color: #EF5350; }
+.dark-theme #polibot-status.connecting { 
+  background-color: #FFA726; 
+}
+.dark-theme .avatar { background-color: #1a365d; }
+.dark-theme .typing-indicator { background-color: #4a5568; color: #f7fafc; }
+.dark-theme .inline-reply { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; }
+.dark-theme .inline-reply:hover { background-color: #4a5568; color: white; }
+
+/* Regla para que las fórmulas KaTeX se vean en modo oscuro */
+.dark-theme .katex {
+  color: #f7fafc;
+}
+
+
+/* -------------------- */
+/* CAJA DEL CHAT */
+/* -------------------- */
+#chat-box {
+  position: fixed;
+  bottom: 88px;
+  right: 12px;
+  width: 380px;
+  max-height: 500px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Outfit', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 999;
+}
+
+#chat-box.show {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  animation: bounceIn 0.4s ease;
+}
+
+#chat-box.hidden { display: none; }
+@keyframes bounceIn {
+  0% { opacity: 0; transform: translateY(50px) scale(0.8); }
+  60% { opacity: 1; transform: translateY(-10px) scale(1.05); }
+  80% { transform: translateY(5px) scale(0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* -------------------- */
+/* ÁREA DE MENSAJES */
+/* -------------------- */
+#chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-size: 14px;
+  color: var(--text-color);
+  background-color: var(--light-gray);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#chat-messages,
+#user-input {
+  scrollbar-width: thin;
+  scrollbar-color: #ccc transparent;
+}
+#chat-messages::-webkit-scrollbar,
+#user-input::-webkit-scrollbar {
+  width: 6px;
+}
+#chat-messages::-webkit-scrollbar-track,
+#user-input::-webkit-scrollbar-track {
+  background: transparent;
+}
+#chat-messages::-webkit-scrollbar-thumb,
+#user-input::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+#chat-messages::-webkit-scrollbar-thumb:hover,
+#user-input::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+/* -------------------- */
+/* BURBUJAS DE MENSAJE */
+/* -------------------- */
+.message-container { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+.message-container.user { justify-content: flex-end; }
+.message-container.user .avatar { order: 2; }
+.message-container.user .message { order: 1; }
+.message { max-width: calc(80% - 48px); padding: 10px 14px; border-radius: 16px; line-height: 1.4; position: relative; word-wrap: break-word; animation: messageIn 0.3s ease-out; }
+@keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.message.user { background-color: var(--primary-color); color: white; border-bottom-right-radius: 4px; }
+.message.ia { background-color: var(--medium-gray); color: var(--text-color); border-bottom-left-radius: 4px; position: relative; }
+.message.ia p { margin-top: 0; margin-bottom: 0.5em; }
+.message.ia p:last-child { margin-bottom: 0; }
+
+/* -------------------- */
+/* AVATARES DE MENSAJES */
+/* -------------------- */
+.avatar { width: 32px; height: 32px; border-radius: 50%; background-color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: white; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+
+/* ---------------------------------- */
+/* ÁREA DE ENTRADA DE TEXTO MODERNA */
+/* ---------------------------------- */
+#input-area {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid #eee;
+  background-color: white;
+  transition: border-color 0.3s;
+}
+
+#user-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  font-size: 15px;
+  resize: none;
+  max-height: 120px;
+  font-family: inherit;
+  outline: none;
+  line-height: 1.5;
+  color: var(--text-color);
+}
+
+#send-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 8px;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#send-button svg {
+  transform: rotate(45deg);
+  margin: -1px 0 0 -2px;
+}
+
+#send-button:active {
+  transform: scale(0.9);
+}
+
+#send-button:disabled {
+  background-color: #e0e0e0;
+  cursor: not-allowed;
+}
+
+#send-button:disabled svg {
+  color: #a6a6a6;
+}
+
+/* -------------------- */
+/* INDICADOR DE TYPING */
+/* -------------------- */
+.typing-indicator { padding: 8px 16px; font-size: 13px; color: var(--text-light); background-color: var(--medium-gray); border-radius: 16px; width: fit-content; }
+.typing-indicator .dot { animation: blink 1.5s infinite; font-weight: bold; color: inherit; opacity: 0; }
+.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
+
+/* -------------------- */
+/* RESPONSIVE DESIGN */
+/* -------------------- */
+@media (max-width: 480px) {
+  #chat-box {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  #chat-header {
+    border-radius: 0;
+  }
+
+  #close-chat-btn {
+    display: block;
+  }
+  
+  #header-center {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #chat-title {
+    line-height: 1;
+  }
+
+  #polibot-status {
+    margin-left: 0;
+  }
+
+  #chat-button {
+    width: 60px;
+    height: 60px;
+  }
+
+  #chat-messages, .message.ia, .message.user {
+    font-size: 16px;
+  }
+  
+  #user-input {
+    font-size: 16px;
+  }
+  
+  #send-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  /* El icono de copiar siempre es visible en móvil */
+  .message.ia .copy-icon { 
+      opacity: 1; 
+      visibility: visible; 
+  }
+}
+
+/* -------------------- */
+/* ESTADOS DE DESACTIVADO */
+/* -------------------- */
+#user-input:disabled {
+  background-color: #f7f7f7;
+  cursor: not-allowed;
+}
+.dark-theme #user-input:disabled {
+  background-color: transparent;
+}
+
+
+/* -------------------- */
+/* NOTIFICACIÓN DE COPIADO */
+/* -------------------- */
+#copy-notification { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background-color: rgba(0, 0, 0, 0.7); color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; z-index: 2000; white-space: nowrap; }
+#copy-notification.show { opacity: 1; visibility: visible; }
+
+/* -------------------- */
+/* ICONO DE COPIAR EN MENSAJES */
+/* -------------------- */
+.copy-icon { position: absolute; bottom: 8px; right: 8px; background-color: rgba(0, 0, 0, 0.05); color: var(--text-light); border-radius: 4px; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease, background-color 0.2s ease, color 0.2s ease; z-index: 10; }
+.message.ia:hover .copy-icon { opacity: 1; visibility: visible; background-color: rgba(0, 0, 0, 0.1); }
+.copy-icon:hover { background-color: var(--primary-color); color: white; }
+.dark-theme .copy-icon { background-color: rgba(255, 255, 255, 0.05); color: #a0aec0; }
+.dark-theme .message.ia:hover .copy-icon { background-color: rgba(255, 255, 255, 0.1); }
+.dark-theme .copy-icon:hover { background-color: #1a365d; color: white; }
+
+/* ================================= */
+/* ESTILOS PARA BOTONES EN LÍNEA     */
+/* ================================= */
+.inline-buttons { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.inline-buttons:last-child { margin-bottom: 0; }
+.inline-reply { background-color: rgba(255, 255, 255, 0.7); color: var(--primary-color); border: 1px solid var(--primary-color); width: 100%; box-sizing: border-box; border-radius: 8px; padding: 10px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer; transition: all 0.2s ease; text-align: center; }
+.inline-reply:hover { background-color: var(--primary-color); color: white; transform: translateY(-1px); }
+
+/* -------------------- */
+/* CURSOR DE ESCRITURA  */
+/* -------------------- */
+.typing-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 1.2em;
+  background-color: var(--text-color);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s infinite;
+}
+
+.dark-theme .typing-cursor {
+  background-color: #f7fafc; /* Color del cursor en tema oscuro */
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
