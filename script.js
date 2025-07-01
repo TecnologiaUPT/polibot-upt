@@ -387,7 +387,7 @@ async function sendMessage() {
 async function fetchAIResponse(userText) {
   // La URL ahora apunta a nuestro propio intermediario seguro en Vercel
   // o funcionará localmente si estás probando con el Vercel CLI.
-  const res = await fetch("/https://polibot-upt.vercel.app/api/proxy", {
+  const res = await fetch("https://polibot-upt.vercel.app/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
