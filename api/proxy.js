@@ -1,30 +1,46 @@
-// api/proxy.js
+// api/proxy.js (Versión final con múltiples dominios permitidos)
 
 export default async function handler(request, response) {
-  // Solo permite peticiones POST
+  // --- Lista de sitios web que tienen permiso para usar la IA ---
+  const allowedOrigins = [
+    'https://uptvallesdeltuy.com', 
+    'https://tecnologiaupt.github.io'
+  ];
+
+  const origin = request.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    response.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  // El navegador envía una petición "previa" (OPTIONS) para verificar los permisos
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+  
+  // --- El resto del código es el mismo ---
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Obtiene la clave secreta de las variables de entorno de Vercel (es seguro)
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    return response.status(500).json({ error: 'API key not configured' });
+    return response.status(500).json({ error: 'API key not configured on Vercel' });
   }
 
   try {
-    // Envía la petición desde nuestro servidor a OpenRouter
     const apiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify(request.body), // Reenvía el cuerpo de la petición original
+      body: JSON.stringify(request.body),
     });
 
-    // Devuelve la respuesta de OpenRouter al chatbot
     const data = await apiResponse.json();
     response.status(200).json(data);
 
