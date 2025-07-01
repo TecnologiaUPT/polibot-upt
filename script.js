@@ -381,18 +381,30 @@ async function sendMessage() {
   }
 }
 
+// =================================================================
+// ✨ ESTA ES LA FUNCIÓN MODIFICADA Y SEGURA ✨
+// =================================================================
 async function fetchAIResponse(userText) {
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  // La URL ahora apunta a nuestro propio intermediario seguro en Vercel
+  // o funcionará localmente si estás probando con el Vercel CLI.
+  const res = await fetch("/api/proxy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer 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"
     },
+    // El cuerpo de la petición es el mismo que antes, sin la API key
     body: JSON.stringify({ model: "deepseek/deepseek-chat", messages: conversationHistory.slice(-10) }),
   });
-  if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+
+  if (!res.ok) {
+    // Si hay un error, intentamos leer el mensaje de error del servidor
+    const errorBody = await res.json().catch(() => ({ error: 'Error desconocido del servidor' }));
+    throw new Error(`Error HTTP: ${res.status} - ${errorBody.error || res.statusText}`);
+  }
+  
   return await res.json();
 }
+
 
 function handleError(error) {
   console.error("Error:", error);
