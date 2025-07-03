@@ -42,6 +42,34 @@
   transform: translateY(-2px);
 }
 
+#chat-button.notification-ping::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 12px;
+  height: 12px;
+  background-color: #f44336; /* Rojo para notificaciones */
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: ping-animation 1.5s infinite;
+}
+
+@keyframes ping-animation {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
 /* ================================= */
 /* ESTILOS PARA LA CARA DE POLIBOT   */
 /* ================================= */
@@ -192,6 +220,8 @@
 .dark-theme .inline-reply { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; }
 .dark-theme .inline-reply:hover { background-color: #4a5568; color: white; }
 .dark-theme .katex { color: #f7fafc; }
+.dark-theme .action-icon { color: #a0aec0; }
+.dark-theme .action-icon:hover { background-color: #4a5568; color: white; }
 
 
 /* -------------------- */
@@ -247,35 +277,61 @@
 #chat-messages::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 /* -------------------- */
-/* BURBUJAS DE MENSAJE */
+/* BURBUJAS DE MENSAJE Y CONTENEDORES */
 /* -------------------- */
-.message-container { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
-.message-container.user { justify-content: flex-end; }
-.message-container.user .avatar { order: 2; }
-.message-container.user .message { order: 1; }
+.message-container { 
+  display: flex; 
+  align-items: flex-start;
+  gap: 8px; 
+  margin-bottom: 8px; 
+}
+.message-container.user { 
+  justify-content: flex-end; 
+}
+.message-container.user .avatar { 
+  order: 2; 
+}
+.message-container.user .message-content-wrapper { 
+  order: 1;
+  align-items: flex-end;
+}
+
+.message-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: calc(85% - 40px);
+}
 
 .message { 
-  max-width: calc(85% - 48px);
-  padding: 10px 14px; 
+  padding: 8px 14px;
   border-radius: 16px; 
-  line-height: 1.5; 
+  line-height: 1.4; 
   position: relative; 
   animation: messageIn 0.3s ease-out;
-  text-align: justify;
-  -webkit-hyphens: auto;
-  -ms-hyphens: auto;
-  hyphens: auto;
+  text-align: left;
   overflow-wrap: break-word;
-
-  /* ---- SOLUCIÓN AL TEXTO QUE SE DESBORDA ---- */
-  word-break: break-all; /* Regla más potente para forzar saltos en URLs y código */
+  word-break: normal;
+  /* Se elimina width: 100% para que la burbuja se ajuste al contenido */
 }
 @keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-.message.user { background-color: var(--primary-color); color: white; }
-.message.ia { background-color: var(--medium-gray); color: var(--text-color); }
-.message p, .message ul, .message ol { margin-top: 0; margin-bottom: 0.5em; }
-.message p:last-child, .message ul:last-child, .message ol:last-child { margin-bottom: 0; }
+.message.user { 
+  background-color: var(--primary-color); 
+  color: white; 
+}
+.message.ia { 
+  background-color: var(--medium-gray); 
+  color: var(--text-color); 
+}
+
+.message p { 
+  margin: 0; 
+}
+.message p:not(:last-child) {
+  margin-bottom: 0.5em;
+}
+
 
 /* -------------------- */
 /* AVATARES */
@@ -360,28 +416,28 @@
 }
 #copy-notification.show { opacity: 1; visibility: visible; }
 
-.copy-icon { 
-  position: absolute; 
-  bottom: 8px; 
-  right: 8px; 
-  background-color: rgba(0, 0, 0, 0.05); 
-  color: var(--text-light); 
-  border-radius: 4px; 
-  width: 20px; 
-  height: 20px; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  font-size: 12px; 
-  cursor: pointer; 
-  opacity: 0; 
-  visibility: hidden; 
-  transition: all 0.2s ease;
-  z-index: 10; 
+.message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }
-.message.ia:hover .copy-icon { opacity: 1; visibility: visible; }
-.copy-icon:hover { background-color: var(--primary-color); color: white; }
-.dark-theme .copy-icon:hover { background-color: #1a365d; }
+.action-icon {
+  width: 24px;
+  height: 24px;
+  background-color: transparent;
+  color: var(--text-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.action-icon:hover {
+  background-color: var(--medium-gray);
+  color: var(--primary-color);
+}
 
 .inline-buttons { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
 .inline-reply { 
@@ -438,7 +494,7 @@
   #polibot-status { margin-left: 0; }
   #user-input, .message { font-size: 16px; }
 
-  .message.ia .copy-icon { 
+  .message.ia .message-actions { 
     opacity: 1; 
     visibility: visible; 
   }
