@@ -101,7 +101,7 @@ function mostrarSonrisa(duracion = 2000) {
 let conversationHistory = [
   {
     role: "system",
-    content: "Eres PoliBot, el asistente virtual de la Universidad Politécnica Territorial de los Valles del Tuy (UPTVT) en Venezuela, Estado Miranda. Fuiste creado por la Dirección de Infraestructura Tecnológica, específicamente por el Licenciado Cherry Esqueda y el estudiante de Ingeniería de Sistemas y de Software José Muro. Tu objetivo es responder preguntas sobre la universidad de manera profesional, amable y concisa. Ve directamente al grano y proporciona respuestas claras y cerradas a las preguntas de los usuarios.",
+    content: "Eres PoliBot, el asistente virtual de la Universidad Politécnica Territorial de los Valles del Tuy (UPTVT) en Venezuela, Estado Miranda. Fuiste creado por la Dirección de Infraestructura Tecnológica, específicamente por Cherry Esqueda y José Muro. Tu objetivo es responder preguntas sobre la universidad de manera profesional, amable y concisa. Ve directamente al grano y proporciona respuestas claras y cerradas a las preguntas de los usuarios. Cuando uses fórmulas matemáticas, utiliza siempre la sintaxis de LaTeX, encerrando las fórmulas en línea con '$' y las fórmulas en bloque con '$$'.",
   },
 ];
 
@@ -110,7 +110,7 @@ let conversationHistory = [
 // ==============================
 const predefinedAnswers = {
   "¿cómo me inscribo?": "Para inscribirte, debes dirigirte a la sede principal por Municipio donde Residas, con los siguientes recaudos:\n\n* Cédula de Identidad (Original y Copia).\n* Título de Bachiller (Original y Copia).\n* Notas Certificadas (Original y Copia).\n\nEl proceso de inscripción para nuevos ingresos suele ser en **Marzo** y **Septiembre**. ¡Te recomendamos estar atento a nuestros anuncios oficiales!",
-  "¿qué PNF ofrecen?": "¡Claro! Ofrecemos una variedad de Programas Nacionales de Formación (PNF). Nuestros PNF son:\n\n* PNF en Ingenieria Industrial.\n* PNF en Ingenieria en Mantenimiento.\n* PNF en Ingenieria en Materiales Industriales.\n* PNF en Ingenieria en Agroalimentación.\n* PNF en Ingenieria en Procesamiento y Distribucion de Alimentos (PDA).\n* PNF en Licenciatura en Contaduria Publica.\n* PNF en Licenciatura en Psicologia Social.\n\nPuedes ver la lista completa en nuestro sitio web.",
+  "¿qué pnf ofrecen?": "¡Claro! Ofrecemos una variedad de Programas Nacionales de Formación (PNF). Nuestros PNF son:\n\n* PNF en Ingenieria Industrial.\n* PNF en Ingenieria en Mantenimiento.\n* PNF en Ingenieria en Materiales Industriales.\n* PNF en Ingenieria en Agroalimentación.\n* PNF en Ingenieria en Procesamiento y Distribucion de Alimentos (PDA).\n* PNF en Licenciatura en Contaduria Publica.\n* PNF en Licenciatura en Psicologia Social.\n\nPuedes ver la lista completa en nuestro sitio web.",
   "¿cuáles son los horarios?": "Los horarios varían según el PNF y la Seleccion del Participante en el momento de su Inscripcion. Generalmente, las clases se imparten en dos Modalidades:\n\n* **Modalidad Dias de Semana:** De 7:00 AM a 1:00 PM y De 1:00 PM a 5:00 PM.\n* **Modalidad Fines de Semana:** De 7:00 AM a 5:00 PM.\n\nLos horarios específicos se publican en las carteleras informativas de cada PNF antes de iniciar el  Trayecto y semestre.",
   "¿dónde están las sedes?": "Nuestra sede principal está ubicada en **Ocumare del Tuy, Hacienda La Guadalupe (RECTORADO)**. \n\nTambién contamos con sedes Academicas en **7 Municipios**, donde se imparten los PNF. ¡Te esperamos!"
 };
@@ -245,7 +245,10 @@ function updatePolibotStatus(status) {
 // ==============================
 // 📱 DETECCIÓN DE MÓVIL Y CONTROL DE VISIBILIDAD
 // ==============================
-function isMobile() { return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent); }
+function isMobile() {
+  // Comprueba si la media query de CSS para pantallas pequeñas está activa.
+  return window.matchMedia('(max-width: 480px)').matches;
+}
 let chatVisible = false;
 function toggleChat(visible) {
   chatVisible = visible;
@@ -315,13 +318,7 @@ async function sendMessage() {
         addNotificationPing();
         receiveSound.play();
 
-        const typingPromise = typeMessage("PoliBot", botReply);
-        
-        setTimeout(() => {
-            hablar(botReply);
-        }, 1000);
-
-        await typingPromise;
+        await typeMessage("PoliBot", botReply);
 
         if (predefinedAnswers[lowerCaseUserText]) {
              mostrarSonrisa();
@@ -359,7 +356,6 @@ async function getAIResponseText() {
         while (true) {
             const { value, done } = await reader.read();
             if (done) {
-                // Procesar cualquier resto en el buffer al final del stream
                 if (buffer.startsWith('data:')) {
                     const finalMessage = buffer.replace(/^data: /, "");
                     try {
@@ -367,24 +363,20 @@ async function getAIResponseText() {
                         const token = parsed.choices[0]?.delta?.content || "";
                         fullReply += token;
                     } catch (e) {
-                        // ignorar error en el último trozo
+                        // ignorar error
                     }
                 }
                 break;
             }
             
-            // Añadir el nuevo trozo al buffer y decodificar
             buffer += decoder.decode(value, { stream: true });
             
-            // Buscar la última línea completa en el buffer
             const lastNewline = buffer.lastIndexOf('\n');
             if (lastNewline === -1) {
-                continue; // No hay líneas completas todavía, esperar más datos
+                continue;
             }
 
-            // Procesar todas las líneas completas
             const processable = buffer.substring(0, lastNewline);
-            // Guardar el resto incompleto en el buffer para la próxima iteración
             buffer = buffer.substring(lastNewline + 1);
 
             const lines = processable.split("\n").filter(line => line.trim().startsWith("data:"));
@@ -400,7 +392,7 @@ async function getAIResponseText() {
                         fullReply += token;
                     }
                 } catch (e) {
-                    // Silenciamos errores de JSON en líneas individuales
+                    // Silenciamos errores
                 }
             }
         }
@@ -444,48 +436,41 @@ function showCopyNotification() {
 }
 
 function createEmptyMessageContainer(sender) {
-    const messageContainer = document.createElement("div");
-    messageContainer.classList.add("message-container", "ia");
-    const avatarSrc = config.avatars.polibot;
+    const fullContainer = document.createElement("div");
+    fullContainer.className = `message-container ${sender.toLowerCase() === 'usuario' ? 'user' : 'ia'}`;
 
     const avatarDiv = document.createElement("div");
-    avatarDiv.classList.add("avatar");
+    avatarDiv.className = "avatar";
     const avatarImg = document.createElement("img");
-    avatarImg.src = avatarSrc;
+    avatarImg.src = sender.toLowerCase() === 'usuario' ? config.avatars.user : config.avatars.polibot;
     avatarImg.alt = sender;
     avatarDiv.appendChild(avatarImg);
 
-    const messageDiv = document.createElement("div");
-    messageDiv.classList.add("message", "ia");
-    const contentSpan = document.createElement("span");
-    contentSpan.classList.add("message-content");
-    messageDiv.appendChild(contentSpan);
+    const messageContentWrapper = document.createElement('div');
+    messageContentWrapper.className = 'message-content-wrapper';
 
-    messageContainer.appendChild(avatarDiv);
-    messageContainer.appendChild(messageDiv);
-    chatMessages.appendChild(messageContainer);
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${sender.toLowerCase() === 'usuario' ? 'user' : 'ia'}`;
+    
+    messageContentWrapper.appendChild(messageDiv);
+    
+    if (sender.toLowerCase() === 'usuario') {
+        fullContainer.appendChild(messageContentWrapper);
+        fullContainer.appendChild(avatarDiv);
+    } else {
+        fullContainer.appendChild(avatarDiv);
+        fullContainer.appendChild(messageContentWrapper);
+    }
+
+    chatMessages.appendChild(fullContainer);
     scrollToBottom();
-    return messageContainer;
+    return messageDiv; // Devuelve la burbuja para poder añadirle contenido
 }
 
 function appendMessage(sender, text, isCopyable = true) {
-  const messageContainer = document.createElement("div");
-  messageContainer.classList.add("message-container");
-  const isUser = sender.toLowerCase() === "usuario";
-  const avatarSrc = isUser ? config.avatars.user : config.avatars.polibot;
-  messageContainer.classList.add(isUser ? "user" : "ia");
-
-  const avatarDiv = document.createElement("div");
-  avatarDiv.classList.add("avatar");
-  const avatarImg = document.createElement("img");
-  avatarImg.src = avatarSrc;
-  avatarImg.alt = sender;
-  avatarDiv.appendChild(avatarImg);
-
-  const messageDiv = document.createElement("div");
-  messageDiv.classList.add("message", isUser ? "user" : "ia");
-
-  if (!isUser && text.startsWith('BOTONES::')) {
+  const messageDiv = createEmptyMessageContainer(sender);
+  
+  if (sender.toLowerCase() !== "usuario" && text.startsWith('BOTONES::')) {
     const parts = text.split('::');
     messageDiv.innerHTML = marked.parse(parts[1] || '');
     const inlineButtonsContainer = document.createElement('div');
@@ -501,26 +486,19 @@ function appendMessage(sender, text, isCopyable = true) {
     });
     messageDiv.appendChild(inlineButtonsContainer);
   } else {
-    messageDiv.innerHTML = isUser ? text : marked.parse(text);
+    messageDiv.innerHTML = sender.toLowerCase() === 'usuario' ? text : marked.parse(text);
   }
 
-  if (!isUser && isCopyable) {
-    addCopyIcon(messageDiv, text);
+  if (sender.toLowerCase() !== "usuario" && isCopyable) {
+    addMessageActions(messageDiv, text);
   }
-
-  messageContainer.appendChild(isUser ? messageDiv : avatarDiv);
-  messageContainer.appendChild(isUser ? avatarDiv : messageDiv);
-
-  chatMessages.appendChild(messageContainer);
-  scrollToBottom();
 }
 
 function simulateTyping(sender) {
   const typingContainer = document.getElementById("typing");
   if (typingContainer) return;
 
-  const container = createEmptyMessageContainer(sender);
-  const messageDiv = container.querySelector('.message');
+  const messageDiv = createEmptyMessageContainer(sender);
   messageDiv.innerHTML = `<div class="typing-indicator" id="typing"><strong>${sender}</strong><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
   scrollToBottom();
 }
@@ -530,27 +508,30 @@ function removeTyping() {
   if (typingContainer) { typingContainer.closest('.message-container')?.remove(); }
 }
 
-// LA VERSIÓN MÁS ESTABLE DE "typeMessage"
 async function typeMessage(sender, text, isCopyable = true) {
   controlarBoca(true);
-  
-  const messageContainer = createEmptyMessageContainer(sender);
-  const messageDiv = messageContainer.querySelector('.message');
-  const contentSpan = messageDiv.querySelector('.message-content');
-  
+
+  const messageDiv = createEmptyMessageContainer(sender);
+
+  // Añadimos el cursor al final del mensaje mientras se escribe
+  const cursorSpan = document.createElement('span');
+  cursorSpan.className = 'typing-cursor';
+
   return new Promise(resolve => {
     let i = 0;
     const type = () => {
-      if (i <= text.length) {
-        // La animación se hace sobre el texto plano para evitar errores.
-        contentSpan.textContent = text.substring(0, i);
+      if (i < text.length) {
+        // Usamos textContent para el texto parcial por seguridad y rendimiento
+        messageDiv.textContent = text.substring(0, i + 1);
+        messageDiv.appendChild(cursorSpan); // Vuelve a añadir el cursor
         i++;
         scrollToBottom();
         setTimeout(type, config.typingSpeed);
       } else {
-        // Al final, se aplica el formato de Markdown una sola vez.
-        contentSpan.innerHTML = marked.parse(text);
-        if (isCopyable) { addCopyIcon(messageDiv, text); }
+        // Al final, procesamos todo el texto con marked para aplicar formato
+        messageDiv.innerHTML = marked.parse(text);
+        if (isCopyable) { addMessageActions(messageDiv, text); }
+        controlarBoca(false); // Detenemos la boca aquí, cuando termina de "hablar"
         resolve();
       }
     };
@@ -558,19 +539,41 @@ async function typeMessage(sender, text, isCopyable = true) {
   });
 }
 
+function addMessageActions(messageDiv, textToInteract) {
+    const wrapper = messageDiv.parentElement;
+    if (!wrapper) return;
 
-function addCopyIcon(messageDiv, textToCopy) {
-  const copyIcon = document.createElement("div");
-  copyIcon.classList.add("copy-icon");
-  copyIcon.innerHTML = '📋';
-  copyIcon.title = 'Copiar texto';
-  copyIcon.addEventListener('click', (event) => {
-    event.stopPropagation();
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = marked.parse(textToCopy);
-    copyTextToClipboard(tempDiv.textContent || tempDiv.innerText || '');
-  });
-  messageDiv.appendChild(copyIcon);
+    // Evita añadir botones si ya existen
+    if (wrapper.querySelector('.message-actions')) return;
+
+    const actionsContainer = document.createElement("div");
+    actionsContainer.className = 'message-actions';
+
+    // Botón de Voz
+    const speakIcon = document.createElement("div");
+    speakIcon.className = "action-icon speak-icon";
+    speakIcon.innerHTML = '🔊';
+    speakIcon.title = 'Reproducir voz';
+    speakIcon.addEventListener('click', (event) => {
+        event.stopPropagation();
+        hablar(textToInteract);
+    });
+
+    // Botón de Copiar
+    const copyIcon = document.createElement("div");
+    copyIcon.className = "action-icon copy-icon";
+    copyIcon.innerHTML = '📋';
+    copyIcon.title = 'Copiar texto';
+    copyIcon.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = marked.parse(textToInteract);
+        copyTextToClipboard(tempDiv.textContent || tempDiv.innerText || '');
+    });
+
+    actionsContainer.appendChild(speakIcon);
+    actionsContainer.appendChild(copyIcon);
+    wrapper.appendChild(actionsContainer);
 }
 
 function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
