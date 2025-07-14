@@ -110,7 +110,7 @@ function mostrarSonrisa(duracion = 2000) {
 let conversationHistory = [
   {
     role: "system",
-    content: "Eres PoliBot, el asistente virtual de la Universidad Politécnica Territorial de los Valles del Tuy (UPTVT) en Venezuela, Estado Miranda. Fuiste creado por la Dirección de Infraestructura Tecnológica, específicamente por Cherry Esqueda y José Muro. Tu objetivo es responder preguntas sobre la universidad de manera profesional, amable y concisa. Ve directamente al grano y proporciona respuestas claras y cerradas a las preguntas de los usuarios. Cuando uses fórmulas matemáticas, utiliza siempre la sintaxis de LaTeX, encerrando las fórmulas en línea con '$' y las fórmulas en bloque con '$$'.",
+    content: "Eres PoliBot, el asistente virtual de la Universidad Politécnica Territorial de los Valles del Tuy (UPTVT) en Venezuela, Estado Miranda. Fuiste creado por la Dirección de Infraestructura Tecnológica, específicamente por el Licenciado Cherry Esqueda y el estudiante de Ingeniería de Sistemas e Ingeniería de Software José Muro. Utilizas un modelo de lenguaje llamado VallThink la cual se encuentra en su versión 1.0. Tu objetivo es responder preguntas sobre la universidad de manera profesional, amable y concisa. Ve directamente al grano y proporciona respuestas claras y cerradas a las preguntas de los usuarios. Cuando uses fórmulas matemáticas, utiliza siempre la sintaxis de LaTeX, encerrando las fórmulas en línea con '$' y las fórmulas en bloque con '$$'.",
   },
 ];
 
@@ -588,7 +588,7 @@ async function typeMessage(sender, text, isCopyable = true) {
           return;
       }
       if (i < text.length) {
-        messageDiv.textContent = text.substring(0, i + 1);
+        messageDiv.innerHTML = text.substring(0, i + 1);
         messageDiv.appendChild(cursorSpan);
         i++;
         scrollToBottom();
@@ -606,10 +606,6 @@ async function typeMessage(sender, text, isCopyable = true) {
 }
 
 function addMessageActions(messageDiv, textToInteract) {
-    // CAMBIO CLAVE Y DEFINITIVO:
-    // Se elimina la referencia al 'wrapper' o 'parentElement'.
-    // Los botones de acción ahora se añaden directamente a la burbuja del mensaje.
-    
     if (messageDiv.querySelector('.message-actions')) return;
 
     const actionsContainer = document.createElement("div");
@@ -619,6 +615,7 @@ function addMessageActions(messageDiv, textToInteract) {
     speakIcon.className = "action-icon speak-icon";
     speakIcon.innerHTML = '🔊';
     speakIcon.title = 'Reproducir voz';
+    speakIcon.setAttribute('aria-label', 'Reproducir mensaje'); // Mejora de accesibilidad
     speakIcon.addEventListener('click', (event) => {
         event.stopPropagation();
         hablar(textToInteract);
@@ -628,6 +625,7 @@ function addMessageActions(messageDiv, textToInteract) {
     copyIcon.className = "action-icon copy-icon";
     copyIcon.innerHTML = '📋';
     copyIcon.title = 'Copiar texto';
+    copyIcon.setAttribute('aria-label', 'Copiar mensaje'); // Mejora de accesibilidad
     copyIcon.addEventListener('click', (event) => {
         event.stopPropagation();
         const tempDiv = document.createElement('div');
@@ -638,8 +636,8 @@ function addMessageActions(messageDiv, textToInteract) {
     actionsContainer.appendChild(speakIcon);
     actionsContainer.appendChild(copyIcon);
     
-    // Esta es la línea que cambia y soluciona el problema:
-    messageDiv.appendChild(actionsContainer);
+    // ✅ CORRECCIÓN CLAVE: Se añade al "parentElement" para no estirar la burbuja.
+    messageDiv.parentElement.appendChild(actionsContainer);
 }
 
 function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
@@ -675,7 +673,7 @@ function init() {
   initEventListeners();
   iniciarAnimaciones();
   setTimeout(() => {
-    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿cómo me inscribo?|¿cómo me inscribo?]--[¿qué PNF ofrecen?|¿qué pnf ofrecen?]--[¿cuáles son los horarios?|¿cuáles son los horarios?]--[¿dónde están las sedes?|¿dónde están las sedes?]";
+    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿Cómo me inscribo?|¿Cómo me inscribo?]--[¿Qué PNF ofrecen?|¿Qué PNF ofrecen?]--[¿Cuáles son los horarios?|¿Cuáles son los horarios?]--[¿Dónde están las sedes?|¿Dónde están las sedes?]";
     appendMessage("PoliBot", welcomeMsg, false); 
     conversationHistory.push({ role: "assistant", content: "¡Hola! Soy PoliBot, tu asistente." });
   }, 1000);
