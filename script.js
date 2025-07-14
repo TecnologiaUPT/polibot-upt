@@ -417,7 +417,7 @@ async function getAIResponseText() {
         const response = await fetch("/api/proxy", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "deepseek/deepseek-chat:free", messages: conversationHistory.slice(-10) }),
+            body: JSON.stringify({ model: "deepseek/deepseek-chat-v3-0324:free", messages: conversationHistory.slice(-10) }),
             signal: abortController.signal, 
         });
 
