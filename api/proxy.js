@@ -1,13 +1,12 @@
 export default async function handler(request, response) {
   // --- Manejo de CORS ---
   // ✅ MEJORA: Se usan variables de entorno para mayor seguridad y flexibilidad.
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://uptvallesdeltuy.com,https://https://polibot-upt.vercel.app/').split(',');
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://uptvallesdeltuy.com,https://polibot-upt.vercel.app/').split(',');
   const origin = request.headers.origin;
 
   if (allowedOrigins.includes(origin)) {
     response.setHeader('Access-Control-Allow-Origin', origin);
     }
-  }
   
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -68,5 +67,6 @@ export default async function handler(request, response) {
     } else {
       // Si ya se enviaron las cabeceras, solo podemos cerrar la conexión.
       response.end();
+      }
     }
   }
