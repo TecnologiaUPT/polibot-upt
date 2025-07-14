@@ -159,40 +159,64 @@ const baseDeConocimiento = {
 
 function buscarEnConocimientoLocal(textoUsuario) {
     const texto = textoUsuario.toLowerCase();
+    const autoridades = baseDeConocimiento.autoridades;
+
+    // Búsqueda de Carreras/PNF (sin cambios)
     if (texto.includes("carrera") || texto.includes("pnf") || texto.includes("estudiar")) {
         let respuesta = "Ofrecemos los siguientes Programas Nacionales de Formación (PNF):<br><ul>";
-        baseDeConocimiento.carreras.pnf.forEach(carrera => { respuesta += `<li>${carrera}</li>`; });
+        (baseDeConocimiento.carreras.pnf || []).forEach(carrera => {
+            respuesta += `<li>${carrera}</li>`;
+        });
         respuesta += "</ul>";
         return respuesta;
     }
+
+    // Búsqueda de Sedes (sin cambios)
     if (texto.includes("sede") || texto.includes("ubicación") || texto.includes("dirección")) {
-        let respuesta = `Nuestra sede principal es: <b>${baseDeConocimiento.sedes.principal}</b>.<br><br>Contamos con las sedes municipales academicas  en:<br><ul>`;
-        baseDeConocimiento.sedes.otras.forEach(sede => { respuesta += `<li>${sede}</li>`; });
+        let respuesta = `Nuestra sede principal es: <b>${baseDeConocimiento.sedes.principal}</b>.<br><br>Contamos con las sedes municipales academicas en:<br><ul>`;
+        (baseDeConocimiento.sedes.otras || []).forEach(sede => {
+            respuesta += `<li>${sede}</li>`;
+        });
         respuesta += "</ul>";
         return respuesta;
     }
+
+    // Búsqueda de Requisitos (sin cambios)
     if (texto.includes("requisito") || texto.includes("inscribirme") || texto.includes("inscripción")) {
         let respuesta = "Los requisitos para la inscripción son los siguientes:<br><ul>";
-        baseDeConocimiento.requisitos.inscripcion.forEach(req => { respuesta += `<li>${req}</li>`; });
+        (baseDeConocimiento.requisitos.inscripcion || []).forEach(req => {
+            respuesta += `<li>${req}</li>`;
+        });
         respuesta += "</ul>";
         return respuesta;
     }
-    for (const cargo in baseDeConocimiento.autoridades) {
-        const cargoFormateado = cargo.replace(/_/g, " ");
-        const infoAutoridad = baseDeConocimiento.autoridades[cargo];
-        const regexCargo = new RegExp('\\b' + cargoFormateado + '\\b', 'i');
-        
-        if (regexCargo.test(texto)) { 
-            return `La persona a cargo de esa posición es: <b>${infoAutoridad}</b>.`;
-        }
 
-        const nombreCompleto = infoAutoridad.split('(')[0].trim();
-        const nombreSinTitulo = nombreCompleto.replace(/^(dr|dra|dr\.|dra\.|lic|ing)\.?\s*/i, '').toLowerCase();
-        
-        if (nombreSinTitulo && texto.includes(nombreSinTitulo)) {
-             return `<b>${infoAutoridad}</b> es el/la ${cargoFormateado.toLowerCase()} de la universidad.`;
+    // Búsqueda de Autoridades
+    if (autoridades) {
+        const todosLosCargos = Object.keys(autoridades);
+        todosLosCargos.sort((a, b) => b.length - a.length);
+
+        for (const cargo of todosLosCargos) {
+            const cargoFormateado = cargo.replace(/_/g, " ").toLowerCase();
+            const infoAutoridad = autoridades[cargo];
+            if (texto.includes(cargoFormateado)) {
+                return `La persona a cargo de esa posición es: <b>${infoAutoridad}</b>.`;
+            }
+            const nombreCompleto = infoAutoridad.split('(')[0].trim();
+            
+            // =================================================================
+            // ✨ LÍNEA CORREGIDA ✨
+            // Esta es la nueva expresión regular que funciona correctamente.
+            const nombreSinTitulo = nombreCompleto.replace(/^(dr(a)?|lic(da)?|ing)\.?\s*/i, '').toLowerCase();
+            // =================================================================
+
+            if (nombreSinTitulo && texto.includes(nombreSinTitulo)) {
+                return `<b>${infoAutoridad}</b> es el/la ${cargoFormateado.replace("direccion", "Director(a) de")} de la universidad.`;
+            }
         }
     }
+
+    // Si no se encuentra nada, devuelve null
     return null;
 }
 
