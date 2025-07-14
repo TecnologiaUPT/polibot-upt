@@ -11,6 +11,7 @@
   --text-light: #555;
   --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);
+  --danger-color: #D32F2F; /* Color para el botón de detener */
 }
 
 /* -------------------- */
@@ -222,6 +223,8 @@
 .dark-theme .katex { color: #f7fafc; }
 .dark-theme .action-icon { color: #a0aec0; }
 .dark-theme .action-icon:hover { background-color: #4a5568; color: white; }
+.dark-theme #stop-button { background-color: #B71C1C; } /* Color stop en tema oscuro */
+.dark-theme #stop-button:hover { background-color: var(--danger-color); }
 
 
 /* -------------------- */
@@ -277,7 +280,7 @@
 #chat-messages::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 /* -------------------- */
-/* BURBUJAS DE MENSAJE Y CONTENEDORES */
+/* BURBUJAS DE MENSAJES Y CONTENEDORES */
 /* -------------------- */
 .message-container { 
   display: flex; 
@@ -311,8 +314,6 @@
   animation: messageIn 0.3s ease-out;
   text-align: left;
   overflow-wrap: break-word;
-  word-break: normal;
-  /* Se elimina width: 100% para que la burbuja se ajuste al contenido */
 }
 @keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -322,7 +323,8 @@
 }
 .message.ia { 
   background-color: var(--medium-gray); 
-  color: var(--text-color); 
+  color: var(--text-color);
+  /* La línea 'width: fit-content;' fue eliminada de aquí porque la solución está en el JS */
 }
 
 .message p { 
@@ -358,6 +360,7 @@
   padding: 8px 12px;
   border-top: 1px solid #eee;
   background-color: white;
+  position: relative;
 }
 
 #user-input {
@@ -374,12 +377,11 @@
   color: var(--text-color);
 }
 
-#send-button {
+#send-button, #stop-button {
   width: 36px;
   height: 36px;
   border-radius: 50%;
   border: none;
-  background-color: var(--primary-color);
   color: white;
   display: flex;
   align-items: center;
@@ -390,10 +392,31 @@
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
+#send-button {
+  background-color: var(--primary-color);
+}
 #send-button svg { transform: rotate(45deg); margin: -1px 0 0 -2px; }
 #send-button:active { transform: scale(0.9); }
 #send-button:disabled { background-color: #e0e0e0; cursor: not-allowed; }
 #send-button:disabled svg { color: #a6a6a6; }
+
+#stop-button {
+    background-color: var(--danger-color);
+    display: none;
+}
+#stop-button:hover {
+    background-color: #C62828;
+}
+#stop-button:active {
+    transform: scale(0.9);
+}
+
+#input-area.is-generating #send-button {
+    display: none;
+}
+#input-area.is-generating #stop-button {
+    display: flex;
+}
 
 /* -------------------- */
 /* OTROS ESTILOS */
