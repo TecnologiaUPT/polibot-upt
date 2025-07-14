@@ -546,6 +546,10 @@
   ===================================================================
 */
 .message.ia pre {
+  
+  /* ✅ Hereda la fuente del resto del chat para un estilo uniforme */
+  font-family: inherit; 
+
   /* Permite que el texto se ajuste automáticamente sin perder los saltos de línea */
   white-space: pre-wrap; 
 
