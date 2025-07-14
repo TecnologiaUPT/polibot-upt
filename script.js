@@ -4,8 +4,10 @@
 const chatButton = document.getElementById("chat-button");
 const chatBox = document.getElementById("chat-box");
 const chatMessages = document.getElementById("chat-messages");
+const inputArea = document.getElementById("input-area"); 
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
+const stopButton = document.getElementById("stop-button"); 
 const themeToggle = document.getElementById("theme-toggle");
 const closeChatBtn = document.getElementById("close-chat-btn");
 const polibotStatus = document.getElementById("polibot-status");
@@ -13,6 +15,13 @@ const copyNotification = document.getElementById("copy-notification");
 // Referencias para las animaciones faciales
 const polibotOjos = document.getElementById('polibotOjos');
 const polibotBoca = document.getElementById('polibotBoca');
+
+// ==============================
+// ⚙️ VARIABLES DE ESTADO
+// ==============================
+let abortController;
+let isGenerationCancelled = false;
+let typingTimeoutId = null; 
 
 
 // ======================================================
@@ -110,7 +119,7 @@ let conversationHistory = [
 // ==============================
 const predefinedAnswers = {
   "¿cómo me inscribo?": "Para inscribirte, debes dirigirte a la sede principal por Municipio donde Residas, con los siguientes recaudos:\n\n* Cédula de Identidad (Original y Copia).\n* Título de Bachiller (Original y Copia).\n* Notas Certificadas (Original y Copia).\n\nEl proceso de inscripción para nuevos ingresos suele ser en **Marzo** y **Septiembre**. ¡Te recomendamos estar atento a nuestros anuncios oficiales!",
-  "¿qué pnf ofrecen?": "¡Claro! Ofrecemos una variedad de Programas Nacionales de Formación (PNF). Nuestros PNF son:\n\n* PNF en Ingenieria Industrial.\n* PNF en Ingenieria en Mantenimiento.\n* PNF en Ingenieria en Materiales Industriales.\n* PNF en Ingenieria en Agroalimentación.\n* PNF en Ingenieria en Procesamiento y Distribucion de Alimentos (PDA).\n* PNF en Licenciatura en Contaduria Publica.\n* PNF en Licenciatura en Psicologia Social.\n\nPuedes ver la lista completa en nuestro sitio web.",
+  "¿qué PNF ofrecen?": "¡Claro! Ofrecemos una variedad de Programas Nacionales de Formación (PNF). Nuestros PNF son:\n\n* PNF en Ingenieria Industrial.\n* PNF en Ingenieria en Mantenimiento.\n* PNF en Ingenieria en Materiales Industriales.\n* PNF en Ingenieria en Agroalimentación.\n* PNF en Ingenieria en Procesamiento y Distribucion de Alimentos (PDA).\n* PNF en Licenciatura en Contaduria Publica.\n* PNF en Licenciatura en Psicologia Social.\n\nPuedes ver la lista completa en nuestro sitio web.",
   "¿cuáles son los horarios?": "Los horarios varían según el PNF y la Seleccion del Participante en el momento de su Inscripcion. Generalmente, las clases se imparten en dos Modalidades:\n\n* **Modalidad Dias de Semana:** De 7:00 AM a 1:00 PM y De 1:00 PM a 5:00 PM.\n* **Modalidad Fines de Semana:** De 7:00 AM a 5:00 PM.\n\nLos horarios específicos se publican en las carteleras informativas de cada PNF antes de iniciar el  Trayecto y semestre.",
   "¿dónde están las sedes?": "Nuestra sede principal está ubicada en **Ocumare del Tuy, Hacienda La Guadalupe (RECTORADO)**. \n\nTambién contamos con sedes Academicas en **7 Municipios**, donde se imparten los PNF. ¡Te esperamos!"
 };
@@ -246,7 +255,6 @@ function updatePolibotStatus(status) {
 // 📱 DETECCIÓN DE MÓVIL Y CONTROL DE VISIBILIDAD
 // ==============================
 function isMobile() {
-  // Comprueba si la media query de CSS para pantallas pequeñas está activa.
   return window.matchMedia('(max-width: 480px)').matches;
 }
 let chatVisible = false;
@@ -269,9 +277,61 @@ function toggleChat(visible) {
 function addNotificationPing() { if (!chatVisible) { chatButton.classList.add('notification-ping'); } }
 function removeNotificationPing() { chatButton.classList.remove('notification-ping'); }
 
+
 // =================================================================
-// 💬 LÓGICA PRINCIPAL DE ENVÍO DE MENSAJES
+// 💬 LÓGICA PRINCIPAL DE ENVÍO Y DETENCIÓN DE MENSAJES
 // =================================================================
+
+function setGeneratingState(isGenerating) {
+    if (isGenerating) {
+        isGenerationCancelled = false;
+        inputArea.classList.add('is-generating');
+        userInput.disabled = true;
+    } else {
+        inputArea.classList.remove('is-generating');
+        userInput.disabled = false;
+        userInput.focus();
+    }
+}
+
+function stopGeneration() {
+    console.log("Generación detenida por el usuario.");
+    isGenerationCancelled = true;
+    
+    if (abortController) {
+        abortController.abort(); 
+    }
+    if (synth) {
+        synth.cancel();
+    }
+    
+    if (typingTimeoutId) {
+        clearTimeout(typingTimeoutId);
+        typingTimeoutId = null;
+    }
+
+    removeTyping();
+    updatePolibotStatus('online');
+    setGeneratingState(false);
+    
+    const lastMessageContainer = chatMessages.lastElementChild;
+    if (lastMessageContainer && lastMessageContainer.classList.contains('ia')) {
+        const messageDiv = lastMessageContainer.querySelector('.message');
+        if (messageDiv && !messageDiv.hasAttribute('data-complete')) {
+            const partialText = messageDiv.textContent;
+            
+            messageDiv.innerHTML = marked.parse(partialText);
+            
+            if (!conversationHistory.some(msg => msg.role === 'assistant' && msg.content === partialText)) {
+                conversationHistory.push({ role: "assistant", content: partialText });
+            }
+            addMessageActions(messageDiv, partialText);
+            messageDiv.setAttribute('data-complete', 'true');
+        }
+    }
+}
+
+
 async function sendMessage() {
     if (synth) synth.cancel();
     const userText = sanitizeInput(userInput.value.trim());
@@ -291,8 +351,9 @@ async function sendMessage() {
     if (navigator.vibrate) navigator.vibrate(50);
     userInput.value = "";
     userInput.dispatchEvent(new Event('input'));
-    userInput.disabled = true;
-    sendButton.disabled = true;
+    
+    setGeneratingState(true);
+    
     conversationHistory.push({ role: "user", content: userText });
 
     let botReply = "";
@@ -310,10 +371,20 @@ async function sendMessage() {
                 simulateTyping("PoliBot");
                 botReply = await getAIResponseText();
                 removeTyping();
-                updatePolibotStatus('online');
+                if (!isGenerationCancelled) {
+                    updatePolibotStatus('online');
+                }
             }
         }
         
+        if (isGenerationCancelled) {
+            console.log("Proceso detenido antes de mostrar la respuesta completa.");
+            if (botReply) { 
+                 await typeMessage("PoliBot", botReply);
+            }
+            return;
+        };
+
         conversationHistory.push({ role: "assistant", content: botReply });
         addNotificationPing();
         receiveSound.play();
@@ -325,22 +396,29 @@ async function sendMessage() {
         }
 
     } catch (error) {
-        handleError(error);
+        if (error.name !== 'AbortError') { 
+            handleError(error);
+        }
     } finally {
-        enableInput();
+        if (!isGenerationCancelled) {
+            setGeneratingState(false);
+        }
     }
 }
 
 // =============================================================
-// ✨ FUNCIÓN PARA OBTENER RESPUESTA DE LA IA (VERSIÓN ROBUSTA)
+// ✨ FUNCIÓN PARA OBTENER RESPUESTA DE LA IA
 // =============================================================
 async function getAIResponseText() {
     let fullReply = "";
+    abortController = new AbortController();
+
     try {
         const response = await fetch("/api/proxy", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ model: "deepseek/deepseek-chat:free", messages: conversationHistory.slice(-10) }),
+            signal: abortController.signal, 
         });
 
         if (!response.ok) {
@@ -356,16 +434,6 @@ async function getAIResponseText() {
         while (true) {
             const { value, done } = await reader.read();
             if (done) {
-                if (buffer.startsWith('data:')) {
-                    const finalMessage = buffer.replace(/^data: /, "");
-                    try {
-                        const parsed = JSON.parse(finalMessage);
-                        const token = parsed.choices[0]?.delta?.content || "";
-                        fullReply += token;
-                    } catch (e) {
-                        // ignorar error
-                    }
-                }
                 break;
             }
             
@@ -398,17 +466,13 @@ async function getAIResponseText() {
         }
         return fullReply;
     } catch (error) {
+        if (error.name === 'AbortError') {
+            return fullReply; 
+        }
         throw error;
     }
 }
 
-
-function enableInput() {
-    controlarBoca(false);
-    userInput.disabled = false;
-    sendButton.disabled = false;
-    userInput.focus();
-}
 
 function handleError(error) {
     removeTyping(); 
@@ -464,7 +528,7 @@ function createEmptyMessageContainer(sender) {
 
     chatMessages.appendChild(fullContainer);
     scrollToBottom();
-    return messageDiv; // Devuelve la burbuja para poder añadirle contenido
+    return messageDiv;
 }
 
 function appendMessage(sender, text, isCopyable = true) {
@@ -512,26 +576,28 @@ async function typeMessage(sender, text, isCopyable = true) {
   controlarBoca(true);
 
   const messageDiv = createEmptyMessageContainer(sender);
-
-  // Añadimos el cursor al final del mensaje mientras se escribe
   const cursorSpan = document.createElement('span');
   cursorSpan.className = 'typing-cursor';
 
   return new Promise(resolve => {
     let i = 0;
     const type = () => {
+      if (isGenerationCancelled) {
+          controlarBoca(false);
+          resolve();
+          return;
+      }
       if (i < text.length) {
-        // Usamos textContent para el texto parcial por seguridad y rendimiento
         messageDiv.textContent = text.substring(0, i + 1);
-        messageDiv.appendChild(cursorSpan); // Vuelve a añadir el cursor
+        messageDiv.appendChild(cursorSpan);
         i++;
         scrollToBottom();
-        setTimeout(type, config.typingSpeed);
+        typingTimeoutId = setTimeout(type, config.typingSpeed);
       } else {
-        // Al final, procesamos todo el texto con marked para aplicar formato
         messageDiv.innerHTML = marked.parse(text);
         if (isCopyable) { addMessageActions(messageDiv, text); }
-        controlarBoca(false); // Detenemos la boca aquí, cuando termina de "hablar"
+        controlarBoca(false);
+        typingTimeoutId = null;
         resolve();
       }
     };
@@ -540,16 +606,15 @@ async function typeMessage(sender, text, isCopyable = true) {
 }
 
 function addMessageActions(messageDiv, textToInteract) {
-    const wrapper = messageDiv.parentElement;
-    if (!wrapper) return;
-
-    // Evita añadir botones si ya existen
-    if (wrapper.querySelector('.message-actions')) return;
+    // CAMBIO CLAVE Y DEFINITIVO:
+    // Se elimina la referencia al 'wrapper' o 'parentElement'.
+    // Los botones de acción ahora se añaden directamente a la burbuja del mensaje.
+    
+    if (messageDiv.querySelector('.message-actions')) return;
 
     const actionsContainer = document.createElement("div");
     actionsContainer.className = 'message-actions';
 
-    // Botón de Voz
     const speakIcon = document.createElement("div");
     speakIcon.className = "action-icon speak-icon";
     speakIcon.innerHTML = '🔊';
@@ -559,7 +624,6 @@ function addMessageActions(messageDiv, textToInteract) {
         hablar(textToInteract);
     });
 
-    // Botón de Copiar
     const copyIcon = document.createElement("div");
     copyIcon.className = "action-icon copy-icon";
     copyIcon.innerHTML = '📋';
@@ -573,7 +637,9 @@ function addMessageActions(messageDiv, textToInteract) {
 
     actionsContainer.appendChild(speakIcon);
     actionsContainer.appendChild(copyIcon);
-    wrapper.appendChild(actionsContainer);
+    
+    // Esta es la línea que cambia y soluciona el problema:
+    messageDiv.appendChild(actionsContainer);
 }
 
 function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
@@ -586,6 +652,7 @@ function initEventListeners() {
   closeChatBtn.addEventListener("click", () => toggleChat(false));
   themeToggle.addEventListener("click", toggleTheme);
   sendButton.addEventListener('click', sendMessage);
+  stopButton.addEventListener('click', stopGeneration); 
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatVisible) toggleChat(false); });
   document.addEventListener('click', (e) => {
     if (!chatBox || !chatButton) return;
@@ -608,7 +675,7 @@ function init() {
   initEventListeners();
   iniciarAnimaciones();
   setTimeout(() => {
-    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿Cómo me inscribo?|¿Cómo me inscribo?]--[¿Qué pnf ofrecen?|¿Qué pnf ofrecen?]--[¿Cuáles son los horarios?|¿Cuáles son los horarios?]--[¿Dónde están las sedes?|¿Dónde están las sedes?]";
+    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿cómo me inscribo?|¿cómo me inscribo?]--[¿qué PNF ofrecen?|¿qué pnf ofrecen?]--[¿cuáles son los horarios?|¿cuáles son los horarios?]--[¿dónde están las sedes?|¿dónde están las sedes?]";
     appendMessage("PoliBot", welcomeMsg, false); 
     conversationHistory.push({ role: "assistant", content: "¡Hola! Soy PoliBot, tu asistente." });
   }, 1000);
