@@ -1,14 +1,14 @@
 export default async function handler(request, response) {
   // --- Manejo de CORS ---
-  const allowedOrigins = [
-    'https://uptvallesdeltuy.com',
-    'https://tecnologiaupt.github.io',
-    // Añade tu servidor local para pruebas, por ejemplo: 'http://127.0.0.1:5500'
-  ];
+  // ✅ MEJORA: Se usan variables de entorno para mayor seguridad y flexibilidad.
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'https://uptvallesdeltuy.com,https://https://polibot-upt.vercel.app/').split(',');
   const origin = request.headers.origin;
+
   if (allowedOrigins.includes(origin)) {
     response.setHeader('Access-Control-Allow-Origin', origin);
+    }
   }
+  
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -70,4 +70,3 @@ export default async function handler(request, response) {
       response.end();
     }
   }
-}
