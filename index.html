@@ -43,10 +43,17 @@
 
     <div id="input-area">
       <textarea id="user-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+      
       <button id="send-button" disabled>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="22" y1="2" x2="11" y2="13"></line>
           <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
+
+      <button id="stop-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="6" width="12" height="12"></rect>
         </svg>
       </button>
     </div>
@@ -55,9 +62,7 @@
   <div id="copy-notification">Copiado al portapapeles</div>
 
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
-  
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/marked-katex-extension/dist/index.umd.js"></script>
   <script src="script.js"></script>
 
