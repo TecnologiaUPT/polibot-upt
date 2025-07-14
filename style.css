@@ -30,7 +30,7 @@
   cursor: pointer;
   box-shadow: var(--shadow);
   transition: all 0.3s ease;
-  z-index: 1000;
+  z-index: 9998;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -247,7 +247,7 @@
   transform: translateY(20px) scale(0.95);
   pointer-events: none;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 999;
+  z-index: 9999;
 }
 
 #chat-box.show {
@@ -279,9 +279,9 @@
 #chat-messages::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
 #chat-messages::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
-/* -------------------- */
-/* BURBUJAS DE MENSAJES Y CONTENEDORES */
-/* -------------------- */
+/* =================================================================== */
+/* BLOQUE DE ESTILOS FINAL, SIMPLE Y ESTABLE                          */
+/* =================================================================== */
 .message-container { 
   display: flex; 
   align-items: flex-start;
@@ -306,6 +306,8 @@
   max-width: calc(85% - 40px);
 }
 
+/* Regla GENERAL para TODAS las burbujas (user y ia). */
+/* Esta es la regla que restaura el estilo de la burbuja de usuario y estabiliza la del bot. */
 .message { 
   padding: 8px 14px;
   border-radius: 16px; 
@@ -313,20 +315,35 @@
   position: relative; 
   animation: messageIn 0.3s ease-out;
   text-align: left;
+  /* La propiedad más importante para evitar el desbordamiento y el texto cortado */
   overflow-wrap: break-word;
 }
 @keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+/* Estilo específico para la burbuja del USUARIO */
 .message.user { 
   background-color: var(--primary-color); 
   color: white; 
 }
+
+/* Estilo específico para la burbuja del BOT */
 .message.ia { 
   background-color: var(--medium-gray); 
   color: var(--text-color);
-  /* La línea 'width: fit-content;' fue eliminada de aquí porque la solución está en el JS */
 }
 
+/* Estilos para las listas */
+.message.ia ul {
+  list-style: disc;
+  padding-left: 20px;
+  margin: 0.5em 0;
+}
+
+.message.ia li {
+  margin-bottom: 0.5em;
+}
+
+/* Estilos para los párrafos dentro de las burbujas */
 .message p { 
   margin: 0; 
 }
@@ -434,7 +451,7 @@
   opacity: 0; 
   visibility: hidden; 
   transition: opacity 0.3s ease, visibility 0.3s ease; 
-  z-index: 2000; 
+  z-index: 10000; 
   white-space: nowrap; 
 }
 #copy-notification.show { opacity: 1; visibility: visible; }
@@ -521,4 +538,17 @@
     opacity: 1; 
     visibility: visible; 
   }
+}
+
+/*
+  ===================================================================
+  FIX DEFINITIVO PARA EL AJUSTE DE TEXTO EN BURBUJAS DE IA
+  ===================================================================
+*/
+.message.ia pre {
+  /* Permite que el texto se ajuste automáticamente sin perder los saltos de línea */
+  white-space: pre-wrap; 
+
+  /* Asegura que las palabras muy largas se corten para evitar el desbordamiento */
+  word-wrap: break-word; 
 }
