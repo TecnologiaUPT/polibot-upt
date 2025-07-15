@@ -122,6 +122,7 @@ const predefinedAnswers = {
   "¿qué PNF ofrecen?": "¡Claro! Ofrecemos una variedad de Programas Nacionales de Formación (PNF). Nuestros PNF son:\n\n* PNF en Ingenieria Industrial.\n* PNF en Ingenieria en Mantenimiento.\n* PNF en Ingenieria en Materiales Industriales.\n* PNF en Ingenieria en Agroalimentación.\n* PNF en Ingenieria en Procesamiento y Distribucion de Alimentos (PDA).\n* PNF en Licenciatura en Contaduria Publica.\n* PNF en Licenciatura en Psicologia Social.\n\nPuedes ver la lista completa en nuestro sitio web.",
   "¿cuáles son los horarios?": "Los horarios varían según el PNF y la Seleccion del Participante en el momento de su Inscripcion. Generalmente, las clases se imparten en dos Modalidades:\n\n* **Modalidad Dias de Semana:** De 7:00 AM a 1:00 PM y De 1:00 PM a 5:00 PM.\n* **Modalidad Fines de Semana:** De 7:00 AM a 5:00 PM.\n\nLos horarios específicos se publican en las carteleras informativas de cada PNF antes de iniciar el  Trayecto y semestre.",
   "¿dónde están las sedes?": "Nuestra sede principal está ubicada en **Ocumare del Tuy, Hacienda La Guadalupe (RECTORADO)**. \n\nTambién contamos con sedes Academicas en **7 Municipios**, donde se imparten los PNF. ¡Te esperamos!"
+  "¿que otros programas ofrecen?": "La Universidad Polictecnica Territorial de los Valles del Tuy (UPTVT) **Tambien te ofrece Diplomados, cursos cortos y programas de formacion continua en diversas areas. Estos programas estan diseñados para completar tu formacion academica y profesional. Puedes consultar la oferta actual en nuestro sitio web oficial o contactar a el Vicerrectorado Academico o a la Direccion de Programas Especiales**.",
 };
 
 
@@ -697,7 +698,7 @@ function init() {
   initEventListeners();
   iniciarAnimaciones();
   setTimeout(() => {
-    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿Cómo me inscribo?|¿Cómo me inscribo?]--[¿Qué PNF ofrecen?|¿Qué PNF ofrecen?]--[¿Cuáles son los horarios?|¿Cuáles son los horarios?]--[¿Dónde están las sedes?|¿Dónde están las sedes?]";
+    const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿Cómo me inscribo?|¿Cómo me inscribo?]--[¿Qué PNF ofrecen?|¿Qué PNF ofrecen?]--[¿Cuáles son los horarios?|¿Cuáles son los horarios?]--[¿Dónde están las sedes?|¿Dónde están las sedes?]--[¿Que otros programas ofrecen?|¿Que otros programas ofrecen?]";
     appendMessage("PoliBot", welcomeMsg, false); 
     conversationHistory.push({ role: "assistant", content: "¡Hola! Soy PoliBot, tu asistente." });
   }, 1000);
