@@ -125,7 +125,6 @@ const predefinedAnswers = {
   "¿que otros programas ofrecen?": "La Universidad Polictecnica Territorial de los Valles del Tuy (UPTVT) **Tambien te ofrece Diplomados, cursos cortos y programas de formacion continua en diversas areas. Estos programas estan diseñados para completar tu formacion academica y profesional. Puedes consultar la oferta actual en nuestro sitio web oficial o contactar a el Vicerrectorado Academico o a la Direccion de Programas Especiales**.",
 };
 
-
 // ==============================
 // ⚙️ CONFIGURACIONES
 // ==============================
