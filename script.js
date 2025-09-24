@@ -4,10 +4,10 @@
 const chatButton = document.getElementById("chat-button");
 const chatBox = document.getElementById("chat-box");
 const chatMessages = document.getElementById("chat-messages");
-const inputArea = document.getElementById("input-area"); 
+const inputArea = document.getElementById("input-area");
 const userInput = document.getElementById("user-input");
 const sendButton = document.getElementById("send-button");
-const stopButton = document.getElementById("stop-button"); 
+const stopButton = document.getElementById("stop-button");
 const themeToggle = document.getElementById("theme-toggle");
 const closeChatBtn = document.getElementById("close-chat-btn");
 const polibotStatus = document.getElementById("polibot-status");
@@ -21,7 +21,7 @@ const polibotBoca = document.getElementById('polibotBoca');
 // ==============================
 let abortController;
 let isGenerationCancelled = false;
-let typingTimeoutId = null; 
+let typingTimeoutId = null;
 
 
 // ======================================================
@@ -52,14 +52,14 @@ function hablar(texto) {
         if (synth.speaking) {
             synth.cancel();
         }
-        
+
         const textoHtml = marked.parse(texto);
         const textoLimpio = stripHtml(textoHtml);
         const textoSinEmojis = textoLimpio.replace(emojiRegex, '');
 
         if (textoSinEmojis.trim() && 'speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(textoSinEmojis);
-            
+
             utterance.lang = 'es-VE';
             utterance.rate = 1;
             utterance.pitch = 1;
@@ -130,7 +130,7 @@ const predefinedAnswers = {
 // ==============================
 const config = {
   rateLimit: 15,
-  typingSpeed: 30, 
+  typingSpeed: 30,
   maxMessageLength: 500,
   avatars: {
     user: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
@@ -203,12 +203,8 @@ function buscarEnConocimientoLocal(textoUsuario) {
                 return `La persona a cargo de esa posición es: <b>${infoAutoridad}</b>.`;
             }
             const nombreCompleto = infoAutoridad.split('(')[0].trim();
-            
-            // =================================================================
-            // ✨ LÍNEA CORREGIDA ✨
-            // Esta es la nueva expresión regular que funciona correctamente.
+
             const nombreSinTitulo = nombreCompleto.replace(/^(dr(a)?|lic(da)?|ing)\.?\s*/i, '').toLowerCase();
-            // =================================================================
 
             if (nombreSinTitulo && texto.includes(nombreSinTitulo)) {
                 return `<b>${infoAutoridad}</b> es el/la ${cargoFormateado.replace("direccion", "Director(a) de")} de la universidad.`;
@@ -216,7 +212,6 @@ function buscarEnConocimientoLocal(textoUsuario) {
         }
     }
 
-    // Si no se encuentra nada, devuelve null
     return null;
 }
 
@@ -288,7 +283,7 @@ function toggleChat(visible) {
   if (visible) {
     chatBox.classList.add("show");
     chatBox.classList.remove("hidden");
-    if (isMobile()) { chatButton.style.display = 'none'; } 
+    if (isMobile()) { chatButton.style.display = 'none'; }
     userInput.focus();
     removeNotificationPing();
   } else {
@@ -321,36 +316,36 @@ function setGeneratingState(isGenerating) {
 function stopGeneration() {
     console.log("Generación detenida por el usuario.");
     isGenerationCancelled = true;
-    
+
     if (abortController) {
-        abortController.abort(); 
+        abortController.abort();
     }
     if (synth) {
         synth.cancel();
     }
-    
+
     if (typingTimeoutId) {
         clearTimeout(typingTimeoutId);
         typingTimeoutId = null;
     }
 
-    removeTyping();
+    removeTyping(); // Esta función ya no se usa para la IA, pero la mantenemos por si acaso
     updatePolibotStatus('online');
     setGeneratingState(false);
-    
+
     const lastMessageContainer = chatMessages.lastElementChild;
     if (lastMessageContainer && lastMessageContainer.classList.contains('ia')) {
         const messageDiv = lastMessageContainer.querySelector('.message');
+        // Finalizar el mensaje si estaba a medias
         if (messageDiv && !messageDiv.hasAttribute('data-complete')) {
             const partialText = messageDiv.textContent;
-            
-            messageDiv.innerHTML = marked.parse(partialText);
-            
+            messageDiv.innerHTML = marked.parse(partialText); // Renderizar lo que se tenga
+
             if (!conversationHistory.some(msg => msg.role === 'assistant' && msg.content === partialText)) {
                 conversationHistory.push({ role: "assistant", content: partialText });
             }
             addMessageActions(messageDiv, partialText);
-            messageDiv.setAttribute('data-complete', 'true');
+            messageDiv.setAttribute('data-complete', 'true'); // Marcar como completado
         }
     }
 }
@@ -375,52 +370,72 @@ async function sendMessage() {
     if (navigator.vibrate) navigator.vibrate(50);
     userInput.value = "";
     userInput.dispatchEvent(new Event('input'));
-    
-    setGeneratingState(true);
-    
-    conversationHistory.push({ role: "user", content: userText });
 
-    let botReply = "";
+    setGeneratingState(true);
+    conversationHistory.push({ role: "user", content: userText });
 
     try {
         const lowerCaseUserText = userText.toLowerCase();
+        let botReply = "";
+
+        // Revisa respuestas predefinidas y conocimiento local primero
         if (predefinedAnswers[lowerCaseUserText]) {
             botReply = predefinedAnswers[lowerCaseUserText];
         } else {
-            const respuestaLocal = buscarEnConocimientoLocal(userText);
-            if (respuestaLocal) {
-                botReply = respuestaLocal;
-            } else {
-                updatePolibotStatus('generating');
-                simulateTyping("PoliBot");
-                botReply = (await getAIResponseText()).trim();
-                removeTyping();
-                if (!isGenerationCancelled) {
-                    updatePolibotStatus('online');
-                }
-            }
+            botReply = buscarEnConocimientoLocal(userText);
         }
-        
-        if (isGenerationCancelled) {
-            console.log("Proceso detenido antes de mostrar la respuesta completa.");
-            if (botReply) { 
-                 await typeMessage("PoliBot", botReply);
+
+        if (botReply) {
+            // Si encontramos una respuesta local, la mostramos con el efecto de tipeo clásico
+            conversationHistory.push({ role: "assistant", content: botReply });
+            addNotificationPing();
+            receiveSound.play();
+            await typeMessage("PoliBot", botReply);
+            if (predefinedAnswers[lowerCaseUserText]) {
+                mostrarSonrisa();
             }
-            return;
-        };
+        } else {
+            // =========================================================================
+            // ✨ INICIO DEL CAMBIO ESENCIAL PARA MEJORAR LA VELOCIDAD DE RESPUESTA ✨
+            // =========================================================================
+            updatePolibotStatus('generating');
+            controlarBoca(true);
 
-        conversationHistory.push({ role: "assistant", content: botReply });
-        addNotificationPing();
-        receiveSound.play();
+            const messageDiv = createEmptyMessageContainer("PoliBot");
+            const cursorSpan = document.createElement('span');
+            cursorSpan.className = 'typing-cursor';
+            messageDiv.appendChild(cursorSpan);
 
-        await typeMessage("PoliBot", botReply);
+            let fullBotReply = "";
+            
+            // Llamamos a la nueva función de streaming que actualiza el DOM en tiempo real
+            await streamAIResponse((token) => {
+                if (isGenerationCancelled) return;
+                fullBotReply += token;
+                // Insertamos el nuevo texto justo antes del cursor parpadeante
+                cursorSpan.insertAdjacentText('beforebegin', token);
+                scrollToBottom();
+            });
 
-        if (predefinedAnswers[lowerCaseUserText]) {
-             mostrarSonrisa();
+            if (isGenerationCancelled) return; // Si se canceló, no continuamos
+
+            // Una vez que el stream termina, hacemos la limpieza final
+            cursorSpan.remove();
+            messageDiv.innerHTML = marked.parse(fullBotReply); // Renderizamos el Markdown final
+            addMessageActions(messageDiv, fullBotReply);
+            messageDiv.setAttribute('data-complete', 'true'); // Marcamos como completado
+
+            conversationHistory.push({ role: "assistant", content: fullBotReply });
+            addNotificationPing();
+            receiveSound.play();
+            controlarBoca(false);
+             // =========================================================================
+            // ✨ FIN DEL CAMBIO ESENCIAL ✨
+            // =========================================================================
         }
 
     } catch (error) {
-        if (error.name !== 'AbortError') { 
+        if (error.name !== 'AbortError') {
             handleError(error);
         }
     } finally {
@@ -431,10 +446,9 @@ async function sendMessage() {
 }
 
 // =============================================================
-// ✨ FUNCIÓN PARA OBTENER RESPUESTA DE LA IA
+// ✨ FUNCIÓN MODIFICADA PARA OBTENER RESPUESTA DE LA IA ✨
 // =============================================================
-async function getAIResponseText() {
-    let fullReply = "";
+async function streamAIResponse(onTokenReceived) {
     abortController = new AbortController();
 
     try {
@@ -456,17 +470,16 @@ async function getAIResponseText() {
         let buffer = '';
 
         while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
+            if (isGenerationCancelled) {
+                reader.cancel();
                 break;
             }
-            
+            const { value, done } = await reader.read();
+            if (done) break;
+
             buffer += decoder.decode(value, { stream: true });
-            
             const lastNewline = buffer.lastIndexOf('\n');
-            if (lastNewline === -1) {
-                continue;
-            }
+            if (lastNewline === -1) continue;
 
             const processable = buffer.substring(0, lastNewline);
             buffer = buffer.substring(lastNewline + 1);
@@ -481,25 +494,27 @@ async function getAIResponseText() {
                     const parsed = JSON.parse(message);
                     const token = parsed.choices[0]?.delta?.content || "";
                     if (token) {
-                        fullReply += token;
+                        onTokenReceived(token); // <--- Llamamos al callback con cada nuevo fragmento
                     }
                 } catch (e) {
-                    // Silenciamos errores
+                    // Silenciamos errores de parseo de JSON
                 }
             }
         }
-        return fullReply;
     } catch (error) {
-        if (error.name === 'AbortError') {
-            return fullReply; 
+        if (error.name !== 'AbortError') {
+            throw error;
         }
-        throw error;
+    } finally {
+        if (!isGenerationCancelled) {
+            updatePolibotStatus('online');
+        }
     }
 }
 
 
 function handleError(error) {
-    removeTyping(); 
+    // removeTyping(); // Ya no es necesario para la IA, pero lo dejamos por si acaso
     console.error("Error:", error);
     const errorMessage = "⚠️ Error al conectar con el servicio. Por favor intenta nuevamente.";
     appendMessage("PoliBot", errorMessage, false);
@@ -539,9 +554,9 @@ function createEmptyMessageContainer(sender) {
 
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${sender.toLowerCase() === 'usuario' ? 'user' : 'ia'}`;
-    
+
     messageContentWrapper.appendChild(messageDiv);
-    
+
     if (sender.toLowerCase() === 'usuario') {
         fullContainer.appendChild(messageContentWrapper);
         fullContainer.appendChild(avatarDiv);
@@ -557,7 +572,7 @@ function createEmptyMessageContainer(sender) {
 
 function appendMessage(sender, text, isCopyable = true) {
   const messageDiv = createEmptyMessageContainer(sender);
-  
+
   if (sender.toLowerCase() !== "usuario" && text.startsWith('BOTONES::')) {
     const parts = text.split('::');
     messageDiv.innerHTML = marked.parse(parts[1] || '');
@@ -582,6 +597,8 @@ function appendMessage(sender, text, isCopyable = true) {
   }
 }
 
+// simulateTyping ya no es necesario para las respuestas de la IA,
+// pero se podría mantener por si se quiere usar en otro lado.
 function simulateTyping(sender) {
   const typingContainer = document.getElementById("typing");
   if (typingContainer) return;
@@ -596,6 +613,7 @@ function removeTyping() {
   if (typingContainer) { typingContainer.closest('.message-container')?.remove(); }
 }
 
+// La función typeMessage ahora solo se usará para respuestas predefinidas, no para la IA
 async function typeMessage(sender, text, isCopyable = true) {
   controlarBoca(true);
 
@@ -612,7 +630,8 @@ async function typeMessage(sender, text, isCopyable = true) {
           return;
       }
       if (i < text.length) {
-        messageDiv.innerHTML = text.substring(0, i + 1);
+        // Usamos textContent para evitar problemas con el parseo de markdown a medio escribir
+        messageDiv.textContent = text.substring(0, i + 1);
         messageDiv.appendChild(cursorSpan);
         i++;
         scrollToBottom();
@@ -639,7 +658,7 @@ function addMessageActions(messageDiv, textToInteract) {
     speakIcon.className = "action-icon speak-icon";
     speakIcon.innerHTML = '🔊';
     speakIcon.title = 'Reproducir voz';
-    speakIcon.setAttribute('aria-label', 'Reproducir mensaje'); // Mejora de accesibilidad
+    speakIcon.setAttribute('aria-label', 'Reproducir mensaje');
     speakIcon.addEventListener('click', (event) => {
         event.stopPropagation();
         hablar(textToInteract);
@@ -649,7 +668,7 @@ function addMessageActions(messageDiv, textToInteract) {
     copyIcon.className = "action-icon copy-icon";
     copyIcon.innerHTML = '📋';
     copyIcon.title = 'Copiar texto';
-    copyIcon.setAttribute('aria-label', 'Copiar mensaje'); // Mejora de accesibilidad
+    copyIcon.setAttribute('aria-label', 'Copiar mensaje');
     copyIcon.addEventListener('click', (event) => {
         event.stopPropagation();
         const tempDiv = document.createElement('div');
@@ -659,8 +678,7 @@ function addMessageActions(messageDiv, textToInteract) {
 
     actionsContainer.appendChild(speakIcon);
     actionsContainer.appendChild(copyIcon);
-    
-    // ✅ CORRECCIÓN CLAVE: Se añade al "parentElement" para no estirar la burbuja.
+
     messageDiv.parentElement.appendChild(actionsContainer);
 }
 
@@ -674,7 +692,7 @@ function initEventListeners() {
   closeChatBtn.addEventListener("click", () => toggleChat(false));
   themeToggle.addEventListener("click", toggleTheme);
   sendButton.addEventListener('click', sendMessage);
-  stopButton.addEventListener('click', stopGeneration); 
+  stopButton.addEventListener('click', stopGeneration);
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatVisible) toggleChat(false); });
   document.addEventListener('click', (e) => {
     if (!chatBox || !chatButton) return;
@@ -698,11 +716,9 @@ function init() {
   iniciarAnimaciones();
   setTimeout(() => {
     const welcomeMsg = "BOTONES::¡Hola! Soy PoliBot, tu asistente. Puedes escribir una pregunta o seleccionar una de estas opciones: ::[¿Cómo me inscribo?|¿Cómo me inscribo?]--[¿Qué PNF ofrecen?|¿Qué PNF ofrecen?]--[¿Cuáles son los horarios?|¿Cuáles son los horarios?]--[¿Dónde están las sedes?|¿Dónde están las sedes?]--[¿Que otros programas ofrecen?|¿Que otros programas ofrecen?]";
-    appendMessage("PoliBot", welcomeMsg, false); 
+    appendMessage("PoliBot", welcomeMsg, false);
     conversationHistory.push({ role: "assistant", content: "¡Hola! Soy PoliBot, tu asistente." });
   }, 1000);
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-
