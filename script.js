@@ -338,8 +338,17 @@ function stopGeneration() {
         const messageDiv = lastMessageContainer.querySelector('.message');
         // Finalizar el mensaje si estaba a medias
         if (messageDiv && !messageDiv.hasAttribute('data-complete')) {
-            const partialText = messageDiv.textContent;
-            messageDiv.innerHTML = marked.parse(partialText); // Renderizar lo que se tenga
+            // ✨ CORRECCIÓN CLAVE: Se reconstruye el texto parcial para mantener el formato original
+            let partialText = '';
+            // Recorremos los nodos hijos del div para obtener el texto crudo, ignorando el cursor
+            messageDiv.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) { // Nos aseguramos de que sea solo texto
+                    partialText += node.textContent;
+                }
+            });
+
+            // Ahora aplicamos el parseo al texto con el formato original intacto
+            messageDiv.innerHTML = marked.parse(partialText); 
 
             if (!conversationHistory.some(msg => msg.role === 'assistant' && msg.content === partialText)) {
                 conversationHistory.push({ role: "assistant", content: partialText });
@@ -395,9 +404,7 @@ async function sendMessage() {
                 mostrarSonrisa();
             }
         } else {
-            // =========================================================================
-            // ✨ INICIO DEL CAMBIO ESENCIAL PARA MEJORAR LA VELOCIDAD DE RESPUESTA ✨
-            // =========================================================================
+            // Si es una respuesta de la IA, usamos el nuevo sistema de streaming
             updatePolibotStatus('generating');
             controlarBoca(true);
 
@@ -408,30 +415,28 @@ async function sendMessage() {
 
             let fullBotReply = "";
             
-            // Llamamos a la nueva función de streaming que actualiza el DOM en tiempo real
             await streamAIResponse((token) => {
                 if (isGenerationCancelled) return;
                 fullBotReply += token;
-                // Insertamos el nuevo texto justo antes del cursor parpadeante
                 cursorSpan.insertAdjacentText('beforebegin', token);
                 scrollToBottom();
             });
 
-            if (isGenerationCancelled) return; // Si se canceló, no continuamos
+            if (isGenerationCancelled) return;
 
-            // Una vez que el stream termina, hacemos la limpieza final
             cursorSpan.remove();
-            messageDiv.innerHTML = marked.parse(fullBotReply); // Renderizamos el Markdown final
+
+            // ✨ CORRECCIÓN CLAVE: Usamos la variable `fullBotReply` que contiene el texto original
+            // en lugar del `.textContent` del div, que pierde el formato de LaTeX.
+            messageDiv.innerHTML = marked.parse(fullBotReply);
+            
             addMessageActions(messageDiv, fullBotReply);
-            messageDiv.setAttribute('data-complete', 'true'); // Marcamos como completado
+            messageDiv.setAttribute('data-complete', 'true');
 
             conversationHistory.push({ role: "assistant", content: fullBotReply });
             addNotificationPing();
             receiveSound.play();
             controlarBoca(false);
-             // =========================================================================
-            // ✨ FIN DEL CAMBIO ESENCIAL ✨
-            // =========================================================================
         }
 
     } catch (error) {
@@ -722,3 +727,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
