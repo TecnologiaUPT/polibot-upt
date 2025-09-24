@@ -25,12 +25,24 @@ let typingTimeoutId = null;
 
 
 // ======================================================
-// ✨ ACTIVAR LA EXTENSIÓN DE KATEX
+// ✨ ACTIVAR LA EXTENSIÓN DE KATEX (VERSIÓN MEJORADA)
 // ======================================================
-if (window.markedKatex) {
-  marked.use(markedKatex({
+if (window.marked && window.katex && window.markedKatex) {
+  console.log("Librerías Marked, KaTeX y la extensión detectadas. Inicializando...");
+  const katexOptions = {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
     throwOnError: false
-  }));
+  };
+
+  marked.use(markedKatex(katexOptions));
+  console.log("Extensión de KaTeX aplicada a Marked.");
+} else {
+  console.error("Error: No se pudieron cargar todas las librerías necesarias para renderizar matemáticas (Marked, KaTeX, o la extensión).");
 }
 
 // ==============================
@@ -727,4 +739,5 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
 
