@@ -12,20 +12,19 @@ const themeToggle = document.getElementById("theme-toggle");
 const closeChatBtn = document.getElementById("close-chat-btn");
 const polibotStatus = document.getElementById("polibot-status");
 const copyNotification = document.getElementById("copy-notification");
-// Referencias para las animaciones faciales
 const polibotOjos = document.getElementById('polibotOjos');
 const polibotBoca = document.getElementById('polibotBoca');
 
 // ==============================
-// ⚙️ VARIABLES DE ESTADO
+// ⚙️ VARIABLES DE ESTADO Y CONFIGURACIÓN
 // ==============================
 let abortController;
 let isGenerationCancelled = false;
 let typingTimeoutId = null;
-
+const VERCEL_URL = "https://polibot-upt.vercel.app"; // URL base para todos los archivos
 
 // ======================================================
-// ✨ ACTIVAR LA EXTENSIÓN DE KATEX (VERSIÓN MEJORADA)
+// ✨ ACTIVAR LA EXTENSIÓN DE KATEX
 // ======================================================
 if (window.marked && window.katex && window.markedKatex) {
   console.log("Librerías Marked, KaTeX y la extensión detectadas. Inicializando...");
@@ -38,7 +37,6 @@ if (window.marked && window.katex && window.markedKatex) {
     ],
     throwOnError: false
   };
-
   marked.use(markedKatex(katexOptions));
   console.log("Extensión de KaTeX aplicada a Marked.");
 } else {
@@ -48,11 +46,10 @@ if (window.marked && window.katex && window.markedKatex) {
 // ==============================
 // 🔊 EFECTOS DE SONIDO Y VOZ
 // ==============================
-const sendSound = new Audio("sounds/Short_Text_Send.mp3");
-const receiveSound = new Audio("sounds/New_Notification.mp3");
+const sendSound = new Audio(`${VERCEL_URL}/sounds/Short_Text_Send.mp3`);
+const receiveSound = new Audio(`${VERCEL_URL}/sounds/New_Notification.mp3`);
 const synth = window.speechSynthesis;
 const emojiRegex = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g;
-
 
 function stripHtml(html) {
     const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -64,31 +61,25 @@ function hablar(texto) {
         if (synth.speaking) {
             synth.cancel();
         }
-
         const textoHtml = marked.parse(texto);
         const textoLimpio = stripHtml(textoHtml);
         const textoSinEmojis = textoLimpio.replace(emojiRegex, '');
-
         if (textoSinEmojis.trim() && 'speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(textoSinEmojis);
-
             utterance.lang = 'es-VE';
             utterance.rate = 1;
             utterance.pitch = 1;
-
             utterance.onend = () => resolve();
             utterance.onerror = (event) => {
                 console.error("Error en la síntesis de voz:", event.error);
                 resolve();
             };
-
             synth.speak(utterance);
         } else {
             resolve();
         }
     });
 }
-
 
 // ==============================
 // ✨ ANIMACIONES FACIALES
@@ -97,20 +88,20 @@ let parpadeoInterval;
 function iniciarAnimaciones() {
     if (!polibotOjos || !polibotBoca) return;
     parpadeoInterval = setInterval(() => {
-        polibotOjos.src = 'images/ojos-cerrados.png';
-        setTimeout(() => { polibotOjos.src = 'images/ojos-abiertos.png'; }, 150);
+        polibotOjos.src = `${VERCEL_URL}/images/ojos-cerrados.png`;
+        setTimeout(() => { polibotOjos.src = `${VERCEL_URL}/images/ojos-abiertos.png`; }, 150);
     }, 2000 + Math.random() * 4000);
 }
 
 function controlarBoca(hablando) {
     if (!polibotBoca) return;
     const isSpeaking = hablando || synth.speaking;
-    polibotBoca.src = isSpeaking ? 'images/boca-hablando.png' : 'images/boca-cerrada.png';
+    polibotBoca.src = isSpeaking ? `${VERCEL_URL}/images/boca-hablando.png` : `${VERCEL_URL}/images/boca-cerrada.png`;
 }
 
 function mostrarSonrisa(duracion = 2000) {
     if (!polibotBoca) return;
-    polibotBoca.src = 'images/boca-sonriendo.png';
+    polibotBoca.src = `${VERCEL_URL}/images/boca-sonriendo.png`;
     setTimeout(() => {
         controlarBoca(false);
     }, duracion);
@@ -146,7 +137,7 @@ const config = {
   maxMessageLength: 500,
   avatars: {
     user: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
-    polibot: 'images/polibot.jpg'
+    polibot: `${VERCEL_URL}/images/polibot.jpg`
   }
 };
 
@@ -172,8 +163,6 @@ const baseDeConocimiento = {
 function buscarEnConocimientoLocal(textoUsuario) {
     const texto = textoUsuario.toLowerCase();
     const autoridades = baseDeConocimiento.autoridades;
-
-    // Búsqueda de Carreras/PNF (sin cambios)
     if (texto.includes("carrera") || texto.includes("pnf") || texto.includes("estudiar")) {
         let respuesta = "Ofrecemos los siguientes Programas Nacionales de Formación (PNF):<br><ul>";
         (baseDeConocimiento.carreras.pnf || []).forEach(carrera => {
@@ -182,8 +171,6 @@ function buscarEnConocimientoLocal(textoUsuario) {
         respuesta += "</ul>";
         return respuesta;
     }
-
-    // Búsqueda de Sedes (sin cambios)
     if (texto.includes("sede") || texto.includes("ubicación") || texto.includes("dirección")) {
         let respuesta = `Nuestra sede principal es: <b>${baseDeConocimiento.sedes.principal}</b>.<br><br>Contamos con las sedes municipales academicas en:<br><ul>`;
         (baseDeConocimiento.sedes.otras || []).forEach(sede => {
@@ -192,8 +179,6 @@ function buscarEnConocimientoLocal(textoUsuario) {
         respuesta += "</ul>";
         return respuesta;
     }
-
-    // Búsqueda de Requisitos (sin cambios)
     if (texto.includes("requisito") || texto.includes("inscribirme") || texto.includes("inscripción")) {
         let respuesta = "Los requisitos para la inscripción son los siguientes:<br><ul>";
         (baseDeConocimiento.requisitos.inscripcion || []).forEach(req => {
@@ -202,12 +187,9 @@ function buscarEnConocimientoLocal(textoUsuario) {
         respuesta += "</ul>";
         return respuesta;
     }
-
-    // Búsqueda de Autoridades
     if (autoridades) {
         const todosLosCargos = Object.keys(autoridades);
         todosLosCargos.sort((a, b) => b.length - a.length);
-
         for (const cargo of todosLosCargos) {
             const cargoFormateado = cargo.replace(/_/g, " ").toLowerCase();
             const infoAutoridad = autoridades[cargo];
@@ -215,15 +197,12 @@ function buscarEnConocimientoLocal(textoUsuario) {
                 return `La persona a cargo de esa posición es: <b>${infoAutoridad}</b>.`;
             }
             const nombreCompleto = infoAutoridad.split('(')[0].trim();
-
             const nombreSinTitulo = nombreCompleto.replace(/^(dr(a)?|lic(da)?|ing)\.?\s*/i, '').toLowerCase();
-
             if (nombreSinTitulo && texto.includes(nombreSinTitulo)) {
                 return `<b>${infoAutoridad}</b> es el/la ${cargoFormateado.replace("direccion", "Director(a) de")} de la universidad.`;
             }
         }
     }
-
     return null;
 }
 
@@ -308,7 +287,6 @@ function toggleChat(visible) {
 function addNotificationPing() { if (!chatVisible) { chatButton.classList.add('notification-ping'); } }
 function removeNotificationPing() { chatButton.classList.remove('notification-ping'); }
 
-
 // =================================================================
 // 💬 LÓGICA PRINCIPAL DE ENVÍO Y DETENCIÓN DE MENSAJES
 // =================================================================
@@ -328,55 +306,42 @@ function setGeneratingState(isGenerating) {
 function stopGeneration() {
     console.log("Generación detenida por el usuario.");
     isGenerationCancelled = true;
-
     if (abortController) {
         abortController.abort();
     }
     if (synth) {
         synth.cancel();
     }
-
     if (typingTimeoutId) {
         clearTimeout(typingTimeoutId);
         typingTimeoutId = null;
     }
-
-    removeTyping(); // Esta función ya no se usa para la IA, pero la mantenemos por si acaso
     updatePolibotStatus('online');
     setGeneratingState(false);
-
     const lastMessageContainer = chatMessages.lastElementChild;
     if (lastMessageContainer && lastMessageContainer.classList.contains('ia')) {
         const messageDiv = lastMessageContainer.querySelector('.message');
-        // Finalizar el mensaje si estaba a medias
         if (messageDiv && !messageDiv.hasAttribute('data-complete')) {
-            // ✨ CORRECCIÓN CLAVE: Se reconstruye el texto parcial para mantener el formato original
             let partialText = '';
-            // Recorremos los nodos hijos del div para obtener el texto crudo, ignorando el cursor
             messageDiv.childNodes.forEach(node => {
-                if (node.nodeType === Node.TEXT_NODE) { // Nos aseguramos de que sea solo texto
+                if (node.nodeType === Node.TEXT_NODE) {
                     partialText += node.textContent;
                 }
             });
-
-            // Ahora aplicamos el parseo al texto con el formato original intacto
-            messageDiv.innerHTML = marked.parse(partialText); 
-
+            messageDiv.innerHTML = marked.parse(partialText);
             if (!conversationHistory.some(msg => msg.role === 'assistant' && msg.content === partialText)) {
                 conversationHistory.push({ role: "assistant", content: partialText });
             }
             addMessageActions(messageDiv, partialText);
-            messageDiv.setAttribute('data-complete', 'true'); // Marcar como completado
+            messageDiv.setAttribute('data-complete', 'true');
         }
     }
 }
-
 
 async function sendMessage() {
     if (synth) synth.cancel();
     const userText = sanitizeInput(userInput.value.trim());
     if (!userText) return;
-
     if (!checkRateLimit()) {
         appendMessage("PoliBot", "⚠️ Has alcanzado el límite de mensajes. Por favor espera un momento.", false);
         return;
@@ -385,29 +350,22 @@ async function sendMessage() {
         appendMessage("PoliBot", `Por favor, limita tu mensaje a ${config.maxMessageLength} caracteres.`, false);
         return;
     }
-
     appendMessage("Usuario", userText);
     sendSound.play();
     if (navigator.vibrate) navigator.vibrate(50);
     userInput.value = "";
     userInput.dispatchEvent(new Event('input'));
-
     setGeneratingState(true);
     conversationHistory.push({ role: "user", content: userText });
-
     try {
         const lowerCaseUserText = userText.toLowerCase();
         let botReply = "";
-
-        // Revisa respuestas predefinidas y conocimiento local primero
         if (predefinedAnswers[lowerCaseUserText]) {
             botReply = predefinedAnswers[lowerCaseUserText];
         } else {
             botReply = buscarEnConocimientoLocal(userText);
         }
-
         if (botReply) {
-            // Si encontramos una respuesta local, la mostramos con el efecto de tipeo clásico
             conversationHistory.push({ role: "assistant", content: botReply });
             addNotificationPing();
             receiveSound.play();
@@ -416,41 +374,29 @@ async function sendMessage() {
                 mostrarSonrisa();
             }
         } else {
-            // Si es una respuesta de la IA, usamos el nuevo sistema de streaming
             updatePolibotStatus('generating');
             controlarBoca(true);
-
             const messageDiv = createEmptyMessageContainer("PoliBot");
             const cursorSpan = document.createElement('span');
             cursorSpan.className = 'typing-cursor';
             messageDiv.appendChild(cursorSpan);
-
             let fullBotReply = "";
-            
             await streamAIResponse((token) => {
                 if (isGenerationCancelled) return;
                 fullBotReply += token;
                 cursorSpan.insertAdjacentText('beforebegin', token);
                 scrollToBottom();
             });
-
             if (isGenerationCancelled) return;
-
             cursorSpan.remove();
-
-            // ✨ CORRECCIÓN CLAVE: Usamos la variable `fullBotReply` que contiene el texto original
-            // en lugar del `.textContent` del div, que pierde el formato de LaTeX.
             messageDiv.innerHTML = marked.parse(fullBotReply);
-            
             addMessageActions(messageDiv, fullBotReply);
             messageDiv.setAttribute('data-complete', 'true');
-
             conversationHistory.push({ role: "assistant", content: fullBotReply });
             addNotificationPing();
             receiveSound.play();
             controlarBoca(false);
         }
-
     } catch (error) {
         if (error.name !== 'AbortError') {
             handleError(error);
@@ -462,30 +408,23 @@ async function sendMessage() {
     }
 }
 
-// =============================================================
-// ✨ FUNCIÓN MODIFICADA PARA OBTENER RESPUESTA DE LA IA ✨
-// =============================================================
 async function streamAIResponse(onTokenReceived) {
     abortController = new AbortController();
-
     try {
-        const response = await fetch("/api/proxy.js", {
+        const response = await fetch(`${VERCEL_URL}/api/proxy.js`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ model: "deepseek/deepseek-chat-v3.1:free", messages: conversationHistory.slice(-10) }),
             signal: abortController.signal,
         });
-
         if (!response.ok) {
             const errorBody = await response.json().catch(() => ({ error: 'Respuesta de error no válida' }));
             const errorMessage = errorBody.error?.message || JSON.stringify(errorBody.error);
             throw new Error(`Error del servidor: ${response.status} - ${errorMessage}`);
         }
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
-
         while (true) {
             if (isGenerationCancelled) {
                 reader.cancel();
@@ -493,25 +432,20 @@ async function streamAIResponse(onTokenReceived) {
             }
             const { value, done } = await reader.read();
             if (done) break;
-
             buffer += decoder.decode(value, { stream: true });
             const lastNewline = buffer.lastIndexOf('\n');
             if (lastNewline === -1) continue;
-
             const processable = buffer.substring(0, lastNewline);
             buffer = buffer.substring(lastNewline + 1);
-
             const lines = processable.split("\n").filter(line => line.trim().startsWith("data:"));
-
             for (const line of lines) {
                 const message = line.replace(/^data: /, "");
                 if (message === "[DONE]") continue;
-
                 try {
                     const parsed = JSON.parse(message);
                     const token = parsed.choices[0]?.delta?.content || "";
                     if (token) {
-                        onTokenReceived(token); // <--- Llamamos al callback con cada nuevo fragmento
+                        onTokenReceived(token);
                     }
                 } catch (e) {
                     // Silenciamos errores de parseo de JSON
@@ -529,9 +463,7 @@ async function streamAIResponse(onTokenReceived) {
     }
 }
 
-
 function handleError(error) {
-    // removeTyping(); // Ya no es necesario para la IA, pero lo dejamos por si acaso
     console.error("Error:", error);
     const errorMessage = "⚠️ Error al conectar con el servicio. Por favor intenta nuevamente.";
     appendMessage("PoliBot", errorMessage, false);
@@ -558,22 +490,17 @@ function showCopyNotification() {
 function createEmptyMessageContainer(sender) {
     const fullContainer = document.createElement("div");
     fullContainer.className = `message-container ${sender.toLowerCase() === 'usuario' ? 'user' : 'ia'}`;
-
     const avatarDiv = document.createElement("div");
     avatarDiv.className = "avatar";
     const avatarImg = document.createElement("img");
     avatarImg.src = sender.toLowerCase() === 'usuario' ? config.avatars.user : config.avatars.polibot;
     avatarImg.alt = sender;
     avatarDiv.appendChild(avatarImg);
-
     const messageContentWrapper = document.createElement('div');
     messageContentWrapper.className = 'message-content-wrapper';
-
     const messageDiv = document.createElement("div");
     messageDiv.className = `message ${sender.toLowerCase() === 'usuario' ? 'user' : 'ia'}`;
-
     messageContentWrapper.appendChild(messageDiv);
-
     if (sender.toLowerCase() === 'usuario') {
         fullContainer.appendChild(messageContentWrapper);
         fullContainer.appendChild(avatarDiv);
@@ -581,7 +508,6 @@ function createEmptyMessageContainer(sender) {
         fullContainer.appendChild(avatarDiv);
         fullContainer.appendChild(messageContentWrapper);
     }
-
     chatMessages.appendChild(fullContainer);
     scrollToBottom();
     return messageDiv;
@@ -589,7 +515,6 @@ function createEmptyMessageContainer(sender) {
 
 function appendMessage(sender, text, isCopyable = true) {
   const messageDiv = createEmptyMessageContainer(sender);
-
   if (sender.toLowerCase() !== "usuario" && text.startsWith('BOTONES::')) {
     const parts = text.split('::');
     messageDiv.innerHTML = marked.parse(parts[1] || '');
@@ -608,21 +533,9 @@ function appendMessage(sender, text, isCopyable = true) {
   } else {
     messageDiv.innerHTML = sender.toLowerCase() === 'usuario' ? text : marked.parse(text);
   }
-
   if (sender.toLowerCase() !== "usuario" && isCopyable) {
     addMessageActions(messageDiv, text);
   }
-}
-
-// simulateTyping ya no es necesario para las respuestas de la IA,
-// pero se podría mantener por si se quiere usar en otro lado.
-function simulateTyping(sender) {
-  const typingContainer = document.getElementById("typing");
-  if (typingContainer) return;
-
-  const messageDiv = createEmptyMessageContainer(sender);
-  messageDiv.innerHTML = `<div class="typing-indicator" id="typing"><strong>${sender}</strong><span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div>`;
-  scrollToBottom();
 }
 
 function removeTyping() {
@@ -630,14 +543,11 @@ function removeTyping() {
   if (typingContainer) { typingContainer.closest('.message-container')?.remove(); }
 }
 
-// La función typeMessage ahora solo se usará para respuestas predefinidas, no para la IA
 async function typeMessage(sender, text, isCopyable = true) {
   controlarBoca(true);
-
   const messageDiv = createEmptyMessageContainer(sender);
   const cursorSpan = document.createElement('span');
   cursorSpan.className = 'typing-cursor';
-
   return new Promise(resolve => {
     let i = 0;
     const type = () => {
@@ -647,7 +557,6 @@ async function typeMessage(sender, text, isCopyable = true) {
           return;
       }
       if (i < text.length) {
-        // Usamos textContent para evitar problemas con el parseo de markdown a medio escribir
         messageDiv.textContent = text.substring(0, i + 1);
         messageDiv.appendChild(cursorSpan);
         i++;
@@ -667,10 +576,8 @@ async function typeMessage(sender, text, isCopyable = true) {
 
 function addMessageActions(messageDiv, textToInteract) {
     if (messageDiv.querySelector('.message-actions')) return;
-
     const actionsContainer = document.createElement("div");
     actionsContainer.className = 'message-actions';
-
     const speakIcon = document.createElement("div");
     speakIcon.className = "action-icon speak-icon";
     speakIcon.innerHTML = '🔊';
@@ -680,7 +587,6 @@ function addMessageActions(messageDiv, textToInteract) {
         event.stopPropagation();
         hablar(textToInteract);
     });
-
     const copyIcon = document.createElement("div");
     copyIcon.className = "action-icon copy-icon";
     copyIcon.innerHTML = '📋';
@@ -692,10 +598,8 @@ function addMessageActions(messageDiv, textToInteract) {
         tempDiv.innerHTML = marked.parse(textToInteract);
         copyTextToClipboard(tempDiv.textContent || tempDiv.innerText || '');
     });
-
     actionsContainer.appendChild(speakIcon);
     actionsContainer.appendChild(copyIcon);
-
     messageDiv.parentElement.appendChild(actionsContainer);
 }
 
@@ -739,5 +643,3 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-
-
