@@ -441,8 +441,8 @@ async function getAIResponseText() {
         const response = await fetch("/api/proxy.js", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "deepseek/deepseek-chat-v3-0324:free", messages: conversationHistory.slice(-10) }),
-            signal: abortController.signal, 
+            body: JSON.stringify({ model: "deepseek/deepseek-chat-v3.1:free", messages: conversationHistory.slice(-10) }),
+            signal: abortController.signal,
         });
 
         if (!response.ok) {
@@ -704,4 +704,5 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+
 
